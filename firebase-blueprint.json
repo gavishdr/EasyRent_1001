@@ -1,0 +1,311 @@
+{
+  "entities": {
+    "Apartment": {
+      "title": "Apartment",
+      "description": "Represents a real estate property unit managed by the user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "icon": { "type": "string" },
+        "currency": { "type": "string" },
+        "targetRent": { "type": "string" },
+        "size": { "type": "string" },
+        "pricePerSqm": { "type": "string" },
+        "taxableRent": { "type": "string" },
+        "taxPercent": { "type": "string" },
+        "startDate": { "type": "string" },
+        "contractEnd": { "type": "string" },
+        "status": { "type": "string", "enum": ["landlord", "tenant"] },
+        "displayOrder": { "type": "string" },
+        "isCpiLinked": { "type": "boolean" },
+        "baseRentAmount": { "type": "string" },
+        "baseCpiMonth": { "type": "string" },
+        "baseCpiYear": { "type": "string" }
+      },
+      "required": ["id", "name", "address"]
+    },
+    "CpiIndex": {
+      "title": "CpiIndex",
+      "description": "Represents the Consumer Price Index or construction inputs index over time.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "year": { "type": "integer" },
+        "month": { "type": "integer" },
+        "value": { "type": "number" },
+        "publishedAt": { "type": "string" },
+        "indexType": { "type": "string", "enum": ["cpi", "construction"] }
+      },
+      "required": ["id", "year", "month", "value"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "An income payment (rent, utilities refund, etc.) received for a property.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "aptId": { "type": "string" },
+        "amount": { "type": "string" },
+        "date": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "aptId", "amount", "date"]
+    },
+    "Repair": {
+      "title": "Repair",
+      "description": "A recorded repair or maintenance cost on a property unit.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "aptId": { "type": "string" },
+        "type": { "type": "string" },
+        "providerName": { "type": "string" },
+        "date": { "type": "string" },
+        "cost": { "type": "string" },
+        "actualPaymentDate": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "aptId", "type", "date", "cost"]
+    },
+    "Provider": {
+      "title": "Provider",
+      "description": "A service provider (plumber, electrician, contractor) registry entry.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "specialty": { "type": "string" },
+        "phone": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "name", "specialty"]
+    },
+    "Tenant": {
+      "title": "Tenant",
+      "description": "Active tenant registry entry for a managed property.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "aptId": { "type": "string" },
+        "aptName": { "type": "string" },
+        "entryDate": { "type": "string" },
+        "phone": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "name", "aptId"]
+    },
+    "TenantHistory": {
+      "title": "TenantHistory",
+      "description": "Historic archived record of past tenants.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "aptId": { "type": "string" },
+        "aptName": { "type": "string" },
+        "entryDate": { "type": "string" },
+        "exitDate": { "type": "string" },
+        "phone": { "type": "string" },
+        "notes": { "type": "string" },
+        "archivedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "aptId"]
+    },
+    "Neighbor": {
+      "title": "Neighbor",
+      "description": "Contact registry for building neighbors near the property.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "aptId": { "type": "string" },
+        "aptName": { "type": "string" },
+        "floor": { "type": "string" },
+        "isCommittee": { "type": "string" },
+        "phone": { "type": "string" },
+        "spousePhone": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "name", "aptId"]
+    },
+    "Mortgage": {
+      "title": "Mortgage",
+      "description": "A mortgage detail sheet associated with a property.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "aptId": { "type": "string" },
+        "aptName": { "type": "string" },
+        "bank": { "type": "string" },
+        "originalAmount": { "type": "string" },
+        "interestRate": { "type": "string" },
+        "drawdownDate": { "type": "string" },
+        "durationYears": { "type": "string" },
+        "balance": { "type": "string" },
+        "balanceDate": { "type": "string" },
+        "payment": { "type": "string" },
+        "paymentDate": { "type": "string" },
+        "insuranceCompany": { "type": "string" },
+        "policyNumber": { "type": "string" },
+        "insurancePhone": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "aptId", "bank"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "A regular or operational expense, mortgage payment, or utility bill.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "aptId": { "type": "string" },
+        "type": { "type": "string" },
+        "amount": { "type": "string" },
+        "isPaid": { "type": "string" },
+        "monthFrom": { "type": "string" },
+        "monthTo": { "type": "string" },
+        "meterFrom": { "type": "string" },
+        "meterTo": { "type": "string" },
+        "month": { "type": "string" },
+        "paymentDate": { "type": "string" },
+        "actualPaymentDate": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "grossAmount": { "type": "string" },
+        "discountPercent": { "type": "string" },
+        "securityLevy": { "type": "string" },
+        "mortgageId": { "type": "string" },
+        "newBalance": { "type": "string" },
+        "newBalanceDate": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "aptId", "type", "amount"]
+    },
+    "Inventory": {
+      "title": "Inventory",
+      "description": "Appliances or systems inventories kept inside a property.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "aptId": { "type": "string" },
+        "type": { "type": "string" },
+        "modelDetails": { "type": "string" },
+        "purchaseDate": { "type": "string" },
+        "cost": { "type": "string" },
+        "store": { "type": "string" },
+        "serviceName": { "type": "string" },
+        "servicePhone": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "aptId", "type"]
+    },
+    "RecurringBudget": {
+      "title": "RecurringBudget",
+      "description": "Recurring budget plans for operations.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "aptId": { "type": "string" },
+        "aptName": { "type": "string" },
+        "category": { "type": "string" },
+        "amount": { "type": "string" },
+        "freqMonths": { "type": "string" },
+        "startMonth": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "aptId", "category", "amount"]
+    },
+    "DocumentItem": {
+      "title": "DocumentItem",
+      "description": "Document/file metadata and/or pasted text copy backups.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "aptId": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["contract", "insurance", "receipt", "other"] },
+        "date": { "type": "string" },
+        "url": { "type": "string" },
+        "storagePath": { "type": "string" },
+        "notes": { "type": "string" },
+        "fileName": { "type": "string" },
+        "fileSize": { "type": "number" },
+        "textCopy": { "type": "string" }
+      },
+      "required": ["id", "aptId", "title", "category", "date"]
+    }
+  },
+  "firestore": {
+    "/artifacts/{appId}/public/data/apartments/{id}": {
+      "schema": "Apartment",
+      "description": "User properties"
+    },
+    "/artifacts/{appId}/public/data/payments/{id}": {
+      "schema": "Payment",
+      "description": "Payments received"
+    },
+    "/artifacts/{appId}/public/data/repairs/{id}": {
+      "schema": "Repair",
+      "description": "Repairs done"
+    },
+    "/artifacts/{appId}/public/data/providers/{id}": {
+      "schema": "Provider",
+      "description": "Providers registry"
+    },
+    "/artifacts/{appId}/public/data/tenants/{id}": {
+      "schema": "Tenant",
+      "description": "Tenants registry"
+    },
+    "/artifacts/{appId}/public/data/neighbors/{id}": {
+      "schema": "Neighbor",
+      "description": "Neighbors contacts"
+    },
+    "/artifacts/{appId}/public/data/mortgages/{id}": {
+      "schema": "Mortgage",
+      "description": "Mortgage details"
+    },
+    "/artifacts/{appId}/public/data/expenses/{id}": {
+      "schema": "Expense",
+      "description": "Property expenses"
+    },
+    "/artifacts/{appId}/public/data/inventory/{id}": {
+      "schema": "Inventory",
+      "description": "Apartment inventory"
+    },
+    "/artifacts/{appId}/public/data/tenant_history/{id}": {
+      "schema": "TenantHistory",
+      "description": "Past tenant archives"
+    },
+    "/artifacts/{appId}/public/data/recurring_budgets/{id}": {
+      "schema": "RecurringBudget",
+      "description": "Recurring budget plans"
+    },
+    "/artifacts/{appId}/public/data/documents/{id}": {
+      "schema": "DocumentItem",
+      "description": "Leases, contracts, and documents"
+    },
+    "/artifacts/{appId}/public/data/cpi_history/{id}": {
+      "schema": "CpiIndex",
+      "description": "Indices history copies"
+    },
+    "/cpi_history/{id}": {
+      "schema": "CpiIndex",
+      "description": "Global indices history records"
+    },
+    "/licenses/{id}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "appId": { "type": "string" },
+          "active": { "type": "boolean" },
+          "activatedAt": { "type": "string" }
+        }
+      },
+      "description": "Premium licensing registration entries"
+    }
+  }
+}

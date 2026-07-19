@@ -1,0 +1,25 @@
+{
+  "short_name": "EasyRent",
+  "name": "EasyRent Premium+ ניהול נכסים חכם",
+  "description": "הגרסה המקצועית של איזי רנט - ניהול נכסים חכם, תקבולים, הוצאות, תיקונים, מסמכים ומחשבון פרימיום",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "he"
+}

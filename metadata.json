@@ -1,0 +1,6 @@
+{
+  "name": "EasyRent Premium+",
+  "description": "ניהול נכסים פרימיום חכם - EasyRent Premium+ עם מעקב פיננסי, מסמכים, מטבעות, התראות ולוח שנה מרוכז.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

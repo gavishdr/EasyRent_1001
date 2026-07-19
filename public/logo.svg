@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <!-- Gold Premium Gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <!-- Accent Blue Gradient -->
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#4f46e5" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  
+  <!-- Base Background rounded like a premium app icon -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  
+  <!-- Outer Glow Ring -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="url(#blueGrad)" stroke-width="4" stroke-opacity="0.3" />
+
+  <!-- Abstract Luxury Building Silhouettes -->
+  <g filter="url(#glow)">
+    <!-- Left Tower -->
+    <path d="M140 380 V 180 h 60 v 200 Z" fill="#334155" opacity="0.5" />
+    <!-- Center Premium Tower -->
+    <path d="M180 380 V 120 h 80 v 260 Z" fill="url(#blueGrad)" />
+    <!-- Right Tower -->
+    <path d="M240 380 V 220 h 60 v 160 Z" fill="#1e293b" stroke="#475569" stroke-width="3" />
+    
+    <!-- Decorative building windows -->
+    <rect x="200" y="150" width="12" height="18" rx="2" fill="#e2e8f0" opacity="0.8" />
+    <rect x="228" y="150" width="12" height="18" rx="2" fill="#e2e8f0" opacity="0.8" />
+    <rect x="200" y="190" width="12" height="18" rx="2" fill="#e2e8f0" opacity="0.8" />
+    <rect x="228" y="190" width="12" height="18" rx="2" fill="#e2e8f0" opacity="0.8" />
+    <rect x="200" y="230" width="12" height="18" rx="2" fill="#e2e8f0" opacity="0.8" />
+    <rect x="228" y="230" width="12" height="18" rx="2" fill="#e2e8f0" opacity="0.8" />
+  </g>
+
+  <!-- Elegant Gold House Key overlay -->
+  <g transform="translate(190, 240) rotate(-15)">
+    <!-- Key Head -->
+    <circle cx="-18" cy="0" r="28" fill="url(#goldGrad)" />
+    <circle cx="-18" cy="0" r="12" fill="#0f172a" />
+    
+    <!-- Key Shaft -->
+    <rect x="0" y="-8" width="130" height="16" fill="url(#goldGrad)" />
+    
+    <!-- Key Teeth -->
+    <rect x="80" y="8" width="14" height="20" fill="url(#goldGrad)" />
+    <rect x="105" y="8" width="14" height="25" fill="url(#goldGrad)" />
+    <rect x="115" y="8" width="10" height="15" fill="url(#goldGrad)" />
+  </g>
+  
+  <!-- Letter E accent at the top right -->
+  <text x="350" y="140" font-family="'Inter', system-ui, sans-serif" font-weight="900" font-size="72" fill="url(#goldGrad)">E</text>
+
+  <!-- Elegant swoosh representing property growth / returns -->
+  <path d="M 80 420 C 180 430, 320 400, 430 310" stroke="url(#goldGrad)" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.9" />
+</svg>
