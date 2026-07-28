@@ -228,6 +228,37 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
     }
   };
 
+  const formatDriveAuthError = (err: any, lang: string): string => {
+    const code = err?.code || '';
+    const message = err?.message || String(err || '');
+
+    if (code === 'auth/operation-not-allowed' || message.includes('operation-not-allowed') || message.includes('provider is disabled')) {
+      return lang === 'he'
+        ? 'ספק ההתחברות של Google אינו מופעל בפרויקט Firebase שלך.\n\nאיך להפעיל ב-3 צעדים פשוטים:\n1. היכנס לקונסולת Firebase (console.firebase.google.com)\n2. בחר בפרויקט שלך -> כנס ל-Authentication -> בלשונית Sign-in method\n3. לחץ על ספק Google -> סמן "הפעל" (Enable) -> בחר דוא"ל תמיכה ולחץ "שמור".\n4. נסה לשמור ב-Drive שוב!'
+        : 'Google Sign-In provider is disabled in your Firebase Console.\n\nTo enable it:\n1. Open Firebase Console (console.firebase.google.com)\n2. Select your project -> Authentication -> Sign-in method tab\n3. Click "Google" -> Enable -> Select support email and click Save.\n4. Try saving to Drive again!';
+    }
+
+    if (code === 'auth/unauthorized-domain' || message.includes('unauthorized-domain') || message.includes('authorized domain')) {
+      return lang === 'he'
+        ? 'הדומיין הנוכחי אינו מורשה ב-Firebase Authentication.\n\nאיך להוסיף אותו:\n1. היכנס לקונסולת Firebase (console.firebase.google.com)\n2. כנס ל-Authentication -> בלשונית Settings -> Authorized domains\n3. לחץ על "Add domain" והוסף את easyrent-1001.netlify.app'
+        : 'This domain is not authorized in Firebase Authentication.\n\nTo authorize it:\n1. Open Firebase Console\n2. Go to Authentication -> Settings -> Authorized domains\n3. Click "Add domain" and add easyrent-1001.netlify.app';
+    }
+
+    if (code === 'auth/popup-blocked' || message.includes('popup-blocked')) {
+      return lang === 'he'
+        ? 'חלון ההתחברות של Google נחסם ע"י הדפדפן. יש לאשר חלונות קופצים (Popups) בדפדפן ולנסות שוב.'
+        : 'Google login popup was blocked by the browser. Please allow popups and try again.';
+    }
+
+    if (code === 'auth/popup-closed-by-user' || message.includes('popup-closed-by-user')) {
+      return lang === 'he'
+        ? 'חלון ההתחברות נסגר לפני השלמת ההתחברות ל-Google.'
+        : 'The authentication window was closed before completing Google login.';
+    }
+
+    return message;
+  };
+
   const getOrCreateDriveFolder = async (token: string): Promise<string> => {
     const now = new Date();
     const dd = String(now.getDate()).padStart(2, '0');
@@ -379,12 +410,20 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
       setSaveToDriveSuccess(true);
       alert(lang === 'he' ? `הקובץ נשמר בהצלחה בתיקייה ייעודית ב-Google Drive שלכם!` : 'File successfully saved to a dedicated folder in your Google Drive!');
     } catch (err: any) {
-      console.error("Save to Google Drive failed:", err);
+      console.log("Save to Google Drive status:", err);
       // Clear token on authorization failure so user can sign in again
       if (err.status === 401 || err.message?.includes('auth') || err.message?.includes('permission')) {
         setDriveAccessToken(null);
       }
-      alert((lang === 'he' ? 'שמירה ב-Drive נכשלה: ' : 'Saving to Drive failed: ') + (err.message || err));
+
+      const code = err?.code || '';
+      const message = err?.message || String(err || '');
+      if (code === 'auth/popup-closed-by-user' || message.includes('popup-closed-by-user') || code === 'auth/cancelled-popup-request') {
+        alert(lang === 'he' ? 'ההתחברות ל-Google בוטלה. הקובץ לא נשמר ב-Drive.' : 'Google sign-in was cancelled. File was not saved to Drive.');
+        return;
+      }
+
+      alert((lang === 'he' ? 'שמירה ב-Drive נכשלה:\n\n' : 'Saving to Drive failed:\n\n') + formatDriveAuthError(err, lang));
     } finally {
       setIsSavingToDrive(false);
     }
@@ -692,14 +731,20 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
           
           alert(lang === 'he' ? 'הקובץ נשמר בהצלחה בתיקייה ייעודית ב-Google Drive שלכם!' : 'File successfully saved to a dedicated folder in your Google Drive!');
         } catch (driveErr: any) {
-          console.error("Direct upload to Google Drive failed:", driveErr);
-          // Alert user that local save succeeded but Drive backup failed
-          alert(
-            (lang === 'he' 
-              ? 'המסמך נשמר באפליקציה, אך הגיבוי ל-Google Drive נכשל: ' 
-              : 'Document saved in application, but Google Drive backup failed: ') + 
-            (driveErr.message || driveErr)
-          );
+          console.log("Direct upload to Google Drive status:", driveErr);
+          const code = driveErr?.code || '';
+          const message = driveErr?.message || String(driveErr || '');
+
+          if (code === 'auth/popup-closed-by-user' || message.includes('popup-closed-by-user') || code === 'auth/cancelled-popup-request') {
+            alert(lang === 'he' ? 'המסמך נשמר באפליקציה! (הגיבוי ל-Google Drive בוטל כי חלון ההתחברות נסגר)' : 'Document saved in application! (Google Drive backup was cancelled as login window was closed)');
+          } else {
+            alert(
+              (lang === 'he' 
+                ? 'המסמך נשמר באפליקציה, אך הגיבוי ל-Google Drive נכשל:\n\n' 
+                : 'Document saved in application, but Google Drive backup failed:\n\n') + 
+              formatDriveAuthError(driveErr, lang)
+            );
+          }
         } finally {
           setIsSavingToDriveOnUpload(false);
         }
@@ -986,16 +1031,16 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
                   <div className={`text-[9px] sm:text-[10px] font-black mb-1 uppercase tracking-wider truncate ${displayNoiYTD >= 0 ? 'text-emerald-600 dark:text-emerald-450' : 'text-rose-600 dark:text-rose-455'}`} title={showTax ? t('net_income_after_tax') : t('operating_income')}>
                     {showTax ? t('net_income_after_tax') : t('operating_income')}
                   </div>
-                  <div className={`text-sm sm:text-base md:text-lg font-black truncate ${displayNoiYTD >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`} title={`${displayNoiYTD < 0 ? '-' : ''}${cur}${Math.abs(displayNoiYTD).toLocaleString()}`}>
-                    {displayNoiYTD < 0 ? '-' : ''}{cur}{Math.abs(displayNoiYTD).toLocaleString()}
+                  <div className={`text-sm sm:text-base md:text-lg font-black truncate ${displayNoiYTD >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`} title={`${displayNoiYTD < 0 ? '-' : ''}${cur}${Math.round(Math.abs(displayNoiYTD)).toLocaleString()}`}>
+                    {displayNoiYTD < 0 ? '-' : ''}{cur}{Math.round(Math.abs(displayNoiYTD)).toLocaleString()}
                   </div>
                 </div>
 
                 {/* 2. Monthly Rent */}
                 <div className="bg-slate-50 dark:bg-slate-750 p-3 sm:p-4 rounded-3xl border border-slate-100 dark:border-slate-700 text-center flex flex-col justify-center min-h-[85px] sm:min-h-[90px] overflow-hidden">
                   <div className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-300 font-black mb-1 uppercase tracking-wider truncate" title={t('rent_monthly')}>{t('rent_monthly')}</div>
-                  <div className="text-sm sm:text-base md:text-lg font-black text-slate-700 dark:text-white truncate" title={`${cur}${displayMonthlyRent.toLocaleString()}`}>
-                    {cur}{displayMonthlyRent.toLocaleString()}
+                  <div className="text-sm sm:text-base md:text-lg font-black text-slate-700 dark:text-white truncate" title={`${cur}${Math.round(displayMonthlyRent).toLocaleString()}`}>
+                    {cur}{Math.round(displayMonthlyRent).toLocaleString()}
                   </div>
                   {apt.isCpiLinked && (
                     <span className="text-[8px] sm:text-[9px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 flex items-center justify-center gap-0.5">
@@ -1016,8 +1061,8 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
                 {/* 4. Cash Flow (YTD) */}
                 <div className={`p-3 sm:p-4 rounded-3xl border text-center flex flex-col justify-center min-h-[85px] sm:min-h-[90px] overflow-hidden ${displayCashFlowYTD >= 0 ? 'bg-emerald-50 border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/40' : 'bg-rose-50 border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/40'}`}>
                   <div className={`text-[9px] sm:text-[10px] font-black mb-1 uppercase tracking-wider truncate ${displayCashFlowYTD >= 0 ? 'text-emerald-600 dark:text-emerald-450' : 'text-rose-600 dark:text-rose-455'}`} title={t('cash_flow_ytd')}>{t('cash_flow_ytd')}</div>
-                  <div className={`text-sm sm:text-base md:text-lg font-black truncate ${displayCashFlowYTD >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`} title={`${displayCashFlowYTD < 0 ? '-' : ''}${cur}${Math.abs(displayCashFlowYTD).toLocaleString()}`}>
-                    {displayCashFlowYTD < 0 ? '-' : ''}{cur}{Math.abs(displayCashFlowYTD).toLocaleString()}
+                  <div className={`text-sm sm:text-base md:text-lg font-black truncate ${displayCashFlowYTD >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`} title={`${displayCashFlowYTD < 0 ? '-' : ''}${cur}${Math.round(Math.abs(displayCashFlowYTD)).toLocaleString()}`}>
+                    {displayCashFlowYTD < 0 ? '-' : ''}{cur}{Math.round(Math.abs(displayCashFlowYTD)).toLocaleString()}
                   </div>
                 </div>
               </>
@@ -1025,7 +1070,7 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
               <>
                 <div className="bg-slate-50 dark:bg-slate-750 p-3 sm:p-4 rounded-3xl border border-slate-100 dark:border-slate-700 text-center flex flex-col justify-center min-h-[85px] sm:min-h-[90px] overflow-hidden">
                   <div className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-300 font-black mb-1 uppercase tracking-wider truncate" title={t('rent_monthly')}>{t('rent_monthly')}</div>
-                  <div className="text-sm sm:text-base md:text-lg font-black text-slate-700 dark:text-white truncate" title={`${cur}${displayMonthlyRent.toLocaleString()}`}>{cur}{displayMonthlyRent.toLocaleString()}</div>
+                  <div className="text-sm sm:text-base md:text-lg font-black text-slate-700 dark:text-white truncate" title={`${cur}${Math.round(displayMonthlyRent).toLocaleString()}`}>{cur}{Math.round(displayMonthlyRent).toLocaleString()}</div>
                   {apt.isCpiLinked && (
                     <span className="text-[8px] sm:text-[9px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 flex items-center justify-center gap-0.5">
                       <LucideIcon name="Scale" size={10} />
@@ -1035,7 +1080,7 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
                 </div>
                 <div className="bg-rose-50 dark:bg-rose-950/20 p-3 sm:p-4 rounded-3xl border border-rose-100 dark:border-rose-900/40 text-center flex flex-col justify-center min-h-[85px] sm:min-h-[90px] overflow-hidden">
                   <div className="text-[9px] sm:text-[10px] text-rose-400 dark:text-rose-450 font-black mb-1 uppercase tracking-wider truncate" title={t('total_expenses')}>{t('total_expenses')}</div>
-                  <div className="text-sm sm:text-base md:text-lg font-black text-rose-700 dark:text-rose-400 truncate" title={`${cur}${operatingExpensesYTD.toLocaleString()}`}>{cur}{operatingExpensesYTD.toLocaleString()}</div>
+                  <div className="text-sm sm:text-base md:text-lg font-black text-rose-700 dark:text-rose-400 truncate" title={`${cur}${Math.round(operatingExpensesYTD).toLocaleString()}`}>{cur}{Math.round(operatingExpensesYTD).toLocaleString()}</div>
                 </div>
               </>
             )}
@@ -1266,15 +1311,15 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
             <div className="space-y-4 text-xs font-semibold">
               <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-3">
                 <span className="text-slate-500 dark:text-slate-400">{t('total_income')}</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold">{cur}{paymentsYTD.toLocaleString()}</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold">{cur}{Math.round(paymentsYTD).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-3">
                 <span className="text-slate-500 dark:text-slate-400">{t('total_repairs')}</span>
-                <span className="text-orange-600 dark:text-orange-400 font-bold">{cur}{repairsYTD.toLocaleString()}</span>
+                <span className="text-orange-600 dark:text-orange-400 font-bold">{cur}{Math.round(repairsYTD).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center pb-3">
                 <span className="text-slate-500 dark:text-slate-400">{t('total_expenses')}</span>
-                <span className="text-rose-600 dark:text-rose-455 font-bold">{cur}{operatingExpensesYTD.toLocaleString()}</span>
+                <span className="text-rose-600 dark:text-rose-455 font-bold">{cur}{Math.round(operatingExpensesYTD).toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -1296,7 +1341,7 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
                           <span className="font-bold">{t(cat) || cat}</span>
                           <span className="text-[10px] text-slate-400 font-medium">({percentage.toFixed(0)}%)</span>
                         </div>
-                        <span className="text-slate-800 dark:text-slate-200 font-black">{cur}{Number(amt).toLocaleString()}</span>
+                        <span className="text-slate-800 dark:text-slate-200 font-black">{cur}{Math.round(Number(amt)).toLocaleString()}</span>
                       </div>
                       <div className="w-full bg-slate-100 dark:bg-slate-750 h-1.5 rounded-full overflow-hidden">
                         <div 

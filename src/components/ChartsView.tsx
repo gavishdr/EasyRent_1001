@@ -101,8 +101,8 @@ export const ChartsView: React.FC<ChartsViewProps> = ({
               {monthlyData.map(m => (
                 <div key={m.key} className="flex-1 flex flex-col items-center gap-0.5 h-full justify-end">
                   <div className="w-full flex gap-0.5 items-end justify-center h-full">
-                    <div className="flex-1 bg-emerald-400 rounded-t-md transition-all duration-500 hover:bg-emerald-500 min-h-[2px]" style={{ height: `${Math.max((m.income / maxVal) * 100, 2)}%` }} title={`${curSymbol}${m.income.toLocaleString()}`} />
-                    <div className="flex-1 bg-rose-400 rounded-t-md transition-all duration-500 hover:bg-rose-500 min-h-[2px]" style={{ height: `${Math.max((m.expenses / maxVal) * 100, 2)}%` }} title={`${curSymbol}${m.expenses.toLocaleString()}`} />
+                    <div className="flex-1 bg-emerald-400 rounded-t-md transition-all duration-500 hover:bg-emerald-500 min-h-[2px]" style={{ height: `${Math.max((m.income / maxVal) * 100, 2)}%` }} title={`${curSymbol}${Math.round(m.income).toLocaleString()}`} />
+                    <div className="flex-1 bg-rose-400 rounded-t-md transition-all duration-500 hover:bg-rose-500 min-h-[2px]" style={{ height: `${Math.max((m.expenses / maxVal) * 100, 2)}%` }} title={`${curSymbol}${Math.round(m.expenses).toLocaleString()}`} />
                   </div>
                 </div>
               ))}
@@ -135,7 +135,7 @@ export const ChartsView: React.FC<ChartsViewProps> = ({
                 <div key={key} className="flex items-center gap-3">
                   <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: pieColors[i % pieColors.length] }} />
                   <span className="text-sm text-slate-600 dark:text-slate-400 flex-1 font-medium">{key === 'repairs' ? t('repairs') : (t(key) || key)}</span>
-                  <span className="text-sm font-black text-slate-800 dark:text-white">{curSymbol}{val.toLocaleString()}</span>
+                  <span className="text-sm font-black text-slate-800 dark:text-white">{curSymbol}{Math.round(val).toLocaleString()}</span>
                   <span className="text-xs text-slate-400 dark:text-slate-300 w-10 text-end">{Math.round((val / totalExpenses) * 100)}%</span>
                 </div>
               ))}

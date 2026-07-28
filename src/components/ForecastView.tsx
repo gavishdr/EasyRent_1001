@@ -174,9 +174,9 @@ export const ForecastView: React.FC<ForecastViewProps> = ({
           {Number(form.amount) > 0 && (
             <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 p-4 rounded-2xl mb-4 text-center">
               <div className="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-1">{isHe ? 'סה"כ שנתי' : 'Annual Total'}</div>
-              <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400">₪{annual.toLocaleString()}</div>
+              <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400">₪{Math.round(annual).toLocaleString()}</div>
               <div className="text-xs text-emerald-500 dark:text-emerald-400 mt-1">
-                {Number(form.amount).toLocaleString()}₪ × {12 / Number(form.freqMonths)} {isHe ? 'תשלומים' : 'payments'}
+                {Math.round(Number(form.amount)).toLocaleString()}₪ × {12 / Number(form.freqMonths)} {isHe ? 'תשלומים' : 'payments'}
               </div>
             </div>
           )}
@@ -246,10 +246,10 @@ export const ForecastView: React.FC<ForecastViewProps> = ({
             <div key={i} className="flex-1 flex gap-0.5 items-end h-full justify-center">
               <div className="flex-1 bg-emerald-400 rounded-t-sm min-h-[2px] transition-all"
                 style={{ height: `${Math.max((m.income / maxBar) * 100, 2)}%` }}
-                title={`${t('income_col')}: ₪${m.income.toLocaleString()}`} />
+                title={`${t('income_col')}: ₪${Math.round(m.income).toLocaleString()}`} />
               <div className="flex-1 bg-rose-400 rounded-t-sm min-h-[2px] transition-all"
                 style={{ height: `${Math.max((m.expenses / maxBar) * 100, 2)}%` }}
-                title={`${t('expenses')}: ₪${m.expenses.toLocaleString()}`} />
+                title={`${t('expenses')}: ₪${Math.round(m.expenses).toLocaleString()}`} />
             </div>
           ))}
         </div>
@@ -272,9 +272,9 @@ export const ForecastView: React.FC<ForecastViewProps> = ({
           return (
             <div key={i} className={`grid grid-cols-4 px-4 py-3 border-b border-slate-50 dark:border-slate-800 text-sm ${isCurrentMonth ? 'bg-indigo-50/50 dark:bg-indigo-950/20' : ''}`}>
               <div className="font-bold">{m.name}</div>
-              <div className="text-center text-emerald-600 dark:text-emerald-400 font-semibold">₪{m.income.toLocaleString()}</div>
-              <div className="text-center text-rose-600 dark:text-rose-400 font-semibold">₪{m.expenses.toLocaleString()}</div>
-              <div className={`text-center font-bold ${m.net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>₪{m.net.toLocaleString()}</div>
+              <div className="text-center text-emerald-600 dark:text-emerald-400 font-semibold">₪{Math.round(m.income).toLocaleString()}</div>
+              <div className="text-center text-rose-600 dark:text-rose-400 font-semibold">₪{Math.round(m.expenses).toLocaleString()}</div>
+              <div className={`text-center font-bold ${m.net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>₪{Math.round(m.net).toLocaleString()}</div>
             </div>
           );
         })}

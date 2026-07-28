@@ -1901,11 +1901,11 @@ export default function App() {
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div className="bg-emerald-50 dark:bg-emerald-950/20 p-4 rounded-3xl border border-emerald-100 dark:border-emerald-900/40 overflow-hidden flex flex-col justify-center min-h-[85px]">
                         <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase mb-1 truncate" title={t('operating_income')}>{t('operating_income')}</div>
-                        <div className="text-xl font-black text-emerald-700 dark:text-emerald-400 truncate" title={`${globalCurrencySymbol}${globalNOI.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}>{globalCurrencySymbol}{globalNOI.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                        <div className="text-xl font-black text-emerald-700 dark:text-emerald-400 truncate" title={`${globalCurrencySymbol}${Math.round(globalNOI).toLocaleString()}`}>{globalCurrencySymbol}{Math.round(globalNOI).toLocaleString()}</div>
                       </div>
                       <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-3xl border border-blue-100 dark:border-blue-900/40 overflow-hidden flex flex-col justify-center min-h-[85px]">
                         <div className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase mb-1 truncate" title={t('cash_flow')}>{t('cash_flow')}</div>
-                        <div className="text-xl font-black text-blue-700 dark:text-blue-400 truncate" title={`${globalCurrencySymbol}${globalCashFlow.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}>{globalCurrencySymbol}{globalCashFlow.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                        <div className="text-xl font-black text-blue-700 dark:text-blue-400 truncate" title={`${globalCurrencySymbol}${Math.round(globalCashFlow).toLocaleString()}`}>{globalCurrencySymbol}{Math.round(globalCashFlow).toLocaleString()}</div>
                       </div>
                     </div>
                   </div>

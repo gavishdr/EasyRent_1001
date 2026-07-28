@@ -45,7 +45,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       id: p.id || `p-${p.date}-${p.amount}`,
       type: 'income',
       color: 'bg-emerald-400', 
-      label: `+₪${Number(p.amount || 0).toLocaleString()}`, 
+      label: `+₪${Math.round(Number(p.amount || 0)).toLocaleString()}`, 
       apt: apt?.name || (lang === 'he' ? 'נכס כללי' : 'General Property'), 
       amount: Number(p.amount || 0),
       notes: p.notes || '',
@@ -93,7 +93,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       id: e.id || `e-${dStr}-${e.amount}`,
       type: isMortgage ? 'mortgage' : 'expense',
       color: isMortgage ? 'bg-blue-400' : 'bg-rose-400', 
-      label: `-₪${Number(e.amount || 0).toLocaleString()}`, 
+      label: `-₪${Math.round(Number(e.amount || 0)).toLocaleString()}`, 
       apt: apt?.name || (lang === 'he' ? 'נכס כללי' : 'General Property'), 
       amount: Number(e.amount || 0),
       notes: e.notes || '',
@@ -110,7 +110,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       id: r.id || `r-${r.date}-${r.cost}`,
       type: 'repair',
       color: 'bg-orange-400', 
-      label: `-₪${Number(r.cost || 0).toLocaleString()}`, 
+      label: `-₪${Math.round(Number(r.cost || 0)).toLocaleString()}`, 
       apt: apt?.name || (lang === 'he' ? 'נכס כללי' : 'General Property'), 
       amount: Number(r.cost || 0),
       notes: r.description || r.notes || '',
@@ -168,11 +168,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100/70 dark:border-emerald-900/40 p-4 rounded-2xl text-center shadow-xs">
           <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">{t('income_label')}</div>
-          <div className="text-xl font-black text-emerald-700 dark:text-emerald-400">₪{monthIncome.toLocaleString()}</div>
+          <div className="text-xl font-black text-emerald-700 dark:text-emerald-400">₪{Math.round(monthIncome).toLocaleString()}</div>
         </div>
         <div className="bg-rose-50 dark:bg-rose-950/20 border border-rose-100/70 dark:border-rose-900/40 p-4 rounded-2xl text-center shadow-xs">
           <div className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1">{t('expenses_label')}</div>
-          <div className="text-xl font-black text-rose-700 dark:text-rose-400">₪{monthExpenses.toLocaleString()}</div>
+          <div className="text-xl font-black text-rose-700 dark:text-rose-400">₪{Math.round(monthExpenses).toLocaleString()}</div>
         </div>
       </div>
 
