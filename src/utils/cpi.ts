@@ -218,3 +218,34 @@ export function calculateCpiLinkedRent(
     publicationDate: pubDate
   };
 }
+
+export function getEffectiveRent(
+  apt: any,
+  cpiHistory: CpiIndex[] = [],
+  cpiType: string = 'cpi'
+): number {
+  if (!apt) return 0;
+  if (apt.isCpiLinked) {
+    const res = calculateCpiLinkedRent(
+      Number(apt.baseRentAmount || apt.targetRent || 0),
+      Number(apt.baseCpiYear || 2024),
+      Number(apt.baseCpiMonth || 1),
+      new Date(),
+      cpiHistory,
+      (cpiType || 'cpi') as 'cpi' | 'construction'
+    );
+    return res.adjustedRent;
+  }
+  const segments = apt.rentSegments || [];
+  if (segments.length > 0) {
+    const currentMonthNum = new Date().getMonth() + 1; // 1 to 12
+    const matchingSegment = segments.find(
+      (s: any) => currentMonthNum >= Number(s.fromMonth) && currentMonthNum <= Number(s.toMonth)
+    );
+    if (matchingSegment && matchingSegment.amount !== undefined && matchingSegment.amount !== '') {
+      return Number(matchingSegment.amount);
+    }
+  }
+  return Number(apt.targetRent) || 0;
+}
+

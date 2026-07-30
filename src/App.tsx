@@ -38,8 +38,9 @@ import { ChartsView } from './components/ChartsView';
 import { ModalForm } from './components/ModalForm';
 import { RentSegmentsModal } from './components/RentSegmentsModal';
 import { CpiView } from './components/CpiView';
+import CurrencyCalculatorModal from './components/CurrencyCalculatorModal';
 import { CpiIndex } from './types';
-import { DEFAULT_CPI_LIST, DEFAULT_CONSTRUCTION_LIST } from './utils/cpi';
+import { DEFAULT_CPI_LIST, DEFAULT_CONSTRUCTION_LIST, getEffectiveRent } from './utils/cpi';
 
 const MY_CUSTOM_CONFIG = {
   apiKey: "AIzaSyCU2uNgsbr3sR5IAH9sl5Zuz_ki3dRE9JQ",
@@ -694,6 +695,18 @@ export default function App() {
     const saved = localStorage.getItem('prop_app_thb_rate');
     return saved ? parseFloat(saved) : 0.10;
   });
+  const [aedToIlsRate, setAedToIlsRate] = useState<number>(() => {
+    const saved = localStorage.getItem('prop_app_aed_rate');
+    return saved ? parseFloat(saved) : 1.01;
+  });
+  const [tryToIlsRate, setTryToIlsRate] = useState<number>(() => {
+    const saved = localStorage.getItem('prop_app_try_rate');
+    return saved ? parseFloat(saved) : 0.11;
+  });
+  const [plnToIlsRate, setPlnToIlsRate] = useState<number>(() => {
+    const saved = localStorage.getItem('prop_app_pln_rate');
+    return saved ? parseFloat(saved) : 0.93;
+  });
 
   const [currencyNotice, setCurrencyNotice] = useState<string | null>(null);
   const noticeTimeoutRef = useRef<any>(null);
@@ -720,6 +733,7 @@ export default function App() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isRatesModalOpen, setIsRatesModalOpen] = useState(false);
+  const [isCalcModalOpen, setIsCalcModalOpen] = useState(false);
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
   const [selectedLogoDesign, setSelectedLogoDesign] = useState<string>(() => {
     return localStorage.getItem('prop_app_logo_design') || '6';
@@ -864,6 +878,21 @@ export default function App() {
             const calculatedThb = parseFloat((1 / thbPerIls).toFixed(4));
             setThbToIlsRate(calculatedThb);
             localStorage.setItem('prop_app_thb_rate', calculatedThb.toString());
+          }
+          if (data.rates.AED) {
+            const calculatedAed = parseFloat((1 / data.rates.AED).toFixed(4));
+            setAedToIlsRate(calculatedAed);
+            localStorage.setItem('prop_app_aed_rate', calculatedAed.toString());
+          }
+          if (data.rates.TRY) {
+            const calculatedTry = parseFloat((1 / data.rates.TRY).toFixed(4));
+            setTryToIlsRate(calculatedTry);
+            localStorage.setItem('prop_app_try_rate', calculatedTry.toString());
+          }
+          if (data.rates.PLN) {
+            const calculatedPln = parseFloat((1 / data.rates.PLN).toFixed(4));
+            setPlnToIlsRate(calculatedPln);
+            localStorage.setItem('prop_app_pln_rate', calculatedPln.toString());
           }
           console.log('Updated exchange rates from API successfully');
         }
@@ -1122,17 +1151,19 @@ export default function App() {
   const triggerConfetti = (type: 'save' | 'entrance' = 'save') => {
     if (type === 'save') {
       confetti({
-        particleCount: 40,
-        spread: 40,
-        origin: { y: 0.7 },
+        particleCount: 15,
+        spread: 25,
+        ticks: 50, // ~0.8s duration
+        origin: { y: 0.75 },
         colors: ['#6366f1', '#10b981']
       });
     } else {
       confetti({
-        particleCount: 85,
-        spread: 60,
-        origin: { y: 0.65 },
-        colors: ['#6366f1', '#a855f7', '#10b981', '#f59e0b']
+        particleCount: 22,
+        spread: 35,
+        ticks: 60, // ~1s - 1.2s duration (under 1.5s max)
+        origin: { y: 0.7 },
+        colors: ['#6366f1', '#a855f7', '#10b981']
       });
     }
   };
@@ -1338,7 +1369,8 @@ export default function App() {
 
     // 2. Unpaid rent
     apartments.forEach(apt => {
-      if (apt.status !== 'tenant' && Number(apt.targetRent) > 0 && today.getDate() >= 5) {
+      const currentRent = getEffectiveRent(apt, cpiHistory, cpiType);
+      if (apt.status !== 'tenant' && currentRent > 0 && today.getDate() >= 5) {
         const thisMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
         const paidThisMonth = payments.some(p => p.aptId === apt.id && p.date && p.date.startsWith(thisMonth));
         if (!paidThisMonth) {
@@ -1346,7 +1378,7 @@ export default function App() {
           addAlert(
             `rent_${apt.id}_${thisMonth}`, 'rent',
             `${t('alert_rent_due')} — ${apt.name}`,
-            `${apt.currency || '₪'}${Number(apt.targetRent).toLocaleString()} · ${daysLate} ${t('days_overdue')}`,
+            `${apt.currency || '₪'}${currentRent.toLocaleString()} · ${daysLate} ${t('days_overdue')}`,
             today.getDate() >= 15 ? 'urgent' : 'soon', apt.name
           );
         }
@@ -1388,6 +1420,9 @@ export default function App() {
     if (code === 'EUR' || code === '€') return '€';
     if (code === 'GBP' || code === '£') return '£';
     if (code === 'THB' || code === '฿') return '฿';
+    if (code === 'AED' || code === 'د.إ') return 'د.إ';
+    if (code === 'TRY' || code === '₺') return '₺';
+    if (code === 'PLN' || code === 'zł') return 'zł';
     return code;
   };
 
@@ -1406,9 +1441,15 @@ export default function App() {
       valueInILS = value * gbpToIlsRate;
     } else if (fromSym === '฿') {
       valueInILS = value * thbToIlsRate;
+    } else if (fromSym === 'د.إ') {
+      valueInILS = value * aedToIlsRate;
+    } else if (fromSym === '₺') {
+      valueInILS = value * tryToIlsRate;
+    } else if (fromSym === 'zł') {
+      valueInILS = value * plnToIlsRate;
     }
 
-    let converted = value;
+    let converted = valueInILS;
     // Convert ILS to "to"
     if (toSym === '₪' || toSym === 'ש"ח') {
       converted = valueInILS;
@@ -1420,6 +1461,12 @@ export default function App() {
       converted = valueInILS / gbpToIlsRate;
     } else if (toSym === '฿') {
       converted = valueInILS / thbToIlsRate;
+    } else if (toSym === 'د.إ') {
+      converted = valueInILS / aedToIlsRate;
+    } else if (toSym === '₺') {
+      converted = valueInILS / tryToIlsRate;
+    } else if (toSym === 'zł') {
+      converted = valueInILS / plnToIlsRate;
     }
     return Math.round(converted * 100) / 100;
   };
@@ -1922,20 +1969,22 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="grid gap-4">
-                    {sortedApartments.map(a => (
+                    {sortedApartments.map(a => {
+                      const currentRent = getEffectiveRent(a, cpiHistory, cpiType);
+                      return (
                       <div
                         key={a.id}
                         onClick={() => setSelectedAptId(a.id)}
                         className={`clickable-card w-full p-5 rounded-[2rem] shadow-sm flex items-center justify-between border hover:shadow-md transition-all duration-300 group ${
                           a.status === 'tenant' ? 'bg-rose-50/50 dark:bg-rose-950/10 border-rose-100/50 dark:border-rose-900/20' :
-                          Number(a.targetRent) > 0 ? 'bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-100/50 dark:border-emerald-900/20' :
+                          currentRent > 0 ? 'bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-100/50 dark:border-emerald-900/20' :
                           'bg-blue-50/60 dark:bg-blue-950/10 border-blue-100/50 dark:border-blue-900/20'
                         }`}
                       >
                         <div className="flex items-center gap-5 pointer-events-none">
                           <div className={`p-4 rounded-2xl transition-colors shadow-sm ${
                             a.status === 'tenant' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900 dark:text-rose-300' :
-                            Number(a.targetRent) > 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' :
+                            currentRent > 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' :
                             'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
                           }`}>
                             <LucideIcon name={a.icon || 'Home'} size={26} />
@@ -1952,8 +2001,15 @@ export default function App() {
                               )}
                             </div>
                             <div className="text-sm text-slate-500 dark:text-slate-300">{a.address}</div>
-                            <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-1">
-                              {globalCurrencySymbol || getSymbolForCurrency(a.currency || '₪')}{Math.round(convertAmount(Number(a.targetRent), a.currency || '₪', globalCurrency)).toLocaleString()} / {lang === 'he' ? 'חודש' : 'month'}
+                            <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-1 flex items-center gap-2">
+                              <span>
+                                {globalCurrencySymbol || getSymbolForCurrency(a.currency || '₪')}{Math.round(convertAmount(currentRent, a.currency || '₪', globalCurrency)).toLocaleString()} / {lang === 'he' ? 'חודש' : 'month'}
+                              </span>
+                              {a.rentSegments && a.rentSegments.length > 0 && (
+                                <span className="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded-full text-[10px] font-bold border border-indigo-100 dark:border-indigo-800/50">
+                                  {lang === 'he' ? 'שכירות מעודכנת לחודש זה' : 'Updated rent'}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -2032,7 +2088,8 @@ export default function App() {
                           <LucideIcon name="ChevronLeft" size={20} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
                         </div>
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
                 )}
               </div>
@@ -2197,7 +2254,7 @@ export default function App() {
                             </div>
                             <div className="text-xs sm:text-sm text-slate-400 dark:text-slate-350">{a.address}</div>
                             <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1.5 sm:justify-end">
-                              <span>{getSymbolForCurrency(a.currency || '₪')}{(Number(a.targetRent) || 0).toLocaleString()}</span>
+                              <span>{getSymbolForCurrency(a.currency || '₪')}{(getEffectiveRent(a, cpiHistory, cpiType) || 0).toLocaleString()}</span>
                               {a.rentSegments && a.rentSegments.length > 1 && (
                                 <span className="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded-full text-[10px]">
                                   {a.rentSegments.length} {lang === 'he' ? 'תקופות' : 'periods'}
@@ -2275,6 +2332,15 @@ export default function App() {
                 >
                   <LucideIcon name="Globe" size={20} className="text-indigo-700 dark:text-indigo-400" /> 
                   <span>{lang === 'he' ? 'עדכון שערי חליפין (בנק ישראל)' : 'Update Exchange Rates (Live)'}</span>
+                </button>
+
+                {/* 6. מחשבון המרת מטבעות (כפתור POPUP) */}
+                <button 
+                  onClick={() => setIsCalcModalOpen(true)} 
+                  className="w-full bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-400 py-4 rounded-2xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/20 transition-colors"
+                >
+                  <LucideIcon name="Calculator" size={20} className="text-indigo-600 dark:text-indigo-400" /> 
+                  <span>{lang === 'he' ? 'מחשבון המרת מטבעות' : 'Currency Converter Calculator'}</span>
                 </button>
 
                 {/* Global Currency Switcher */}
@@ -2583,7 +2649,7 @@ export default function App() {
             { key: 'notes', label: t('notes'), type: 'textarea', placeholder: '...' }
           ]}
           initialData={{
-            amount: quickPaymentApt.targetRent || '',
+            amount: getEffectiveRent(quickPaymentApt, cpiHistory, cpiType) || '',
             date: new Date().toISOString().split('T')[0],
             notes: lang === 'he' ? 'תשלום שכר דירה מהיר' : 'Quick rent payment'
           }}
@@ -2671,7 +2737,7 @@ export default function App() {
             ]}
             initialData={{
               type: isQuickRentExpense ? (t('rent_expense') || 'שכר דירה') : (t('other_regular') || 'אחר (שוטף)'),
-              amount: isQuickRentExpense ? (quickExpenseApt.targetRent || '') : '',
+              amount: isQuickRentExpense ? (getEffectiveRent(quickExpenseApt, cpiHistory, cpiType) || '') : '',
               actualPaymentDate: new Date().toISOString().split('T')[0],
               paymentMethod: t('pm_bank_transfer'),
               isPaid: 'true',
@@ -3218,7 +3284,7 @@ export default function App() {
                           </span>
                           <span className="text-[11px] text-slate-400 block">{apt.address}</span>
                           <span className="text-[10px] text-indigo-500 font-bold block mt-0.5">
-                            {getSymbolForCurrency(apt.currency || '₪')}{Number(apt.targetRent).toLocaleString()} / {lang === 'he' ? 'חודש' : 'Month'}
+                            {getSymbolForCurrency(apt.currency || '₪')}{getEffectiveRent(apt, cpiHistory, cpiType).toLocaleString()} / {lang === 'he' ? 'חודש' : 'Month'}
                           </span>
                         </div>
                       </div>
@@ -3402,6 +3468,24 @@ export default function App() {
                         localStorage.setItem('prop_app_thb_rate', calculatedThb.toString());
                         updatedCount++;
                       }
+                      if (data.rates.AED) {
+                        const calculatedAed = parseFloat((1 / data.rates.AED).toFixed(4));
+                        setAedToIlsRate(calculatedAed);
+                        localStorage.setItem('prop_app_aed_rate', calculatedAed.toString());
+                        updatedCount++;
+                      }
+                      if (data.rates.TRY) {
+                        const calculatedTry = parseFloat((1 / data.rates.TRY).toFixed(4));
+                        setTryToIlsRate(calculatedTry);
+                        localStorage.setItem('prop_app_try_rate', calculatedTry.toString());
+                        updatedCount++;
+                      }
+                      if (data.rates.PLN) {
+                        const calculatedPln = parseFloat((1 / data.rates.PLN).toFixed(4));
+                        setPlnToIlsRate(calculatedPln);
+                        localStorage.setItem('prop_app_pln_rate', calculatedPln.toString());
+                        updatedCount++;
+                      }
                       
                       if (updatedCount > 0) {
                         triggerCurrencyNotice(lang === 'he' ? 'שערי החליפין עודכנו בהצלחה!' : 'Exchange rates updated successfully!');
@@ -3433,6 +3517,24 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Currency Calculator Modal */}
+      <CurrencyCalculatorModal
+        isOpen={isCalcModalOpen}
+        onClose={() => setIsCalcModalOpen(false)}
+        lang={lang}
+        rates={{
+          ILS: 1,
+          USD: usdToIlsRate,
+          EUR: eurToIlsRate,
+          GBP: gbpToIlsRate,
+          THB: thbToIlsRate,
+          AED: aedToIlsRate,
+          TRY: tryToIlsRate,
+          PLN: plnToIlsRate,
+        }}
+        convertAmount={convertAmount}
+      />
 
       {/* Floating Exchange Rate & Global Currency Notice (Toast) */}
       {currencyNotice && (
