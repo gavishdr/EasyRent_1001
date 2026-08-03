@@ -232,6 +232,12 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
     const code = err?.code || '';
     const message = err?.message || String(err || '');
 
+    if (message.includes('Google Drive API has not been used') || message.includes('drive.googleapis.com') || message.includes('disabled')) {
+      return lang === 'he'
+        ? 'שירות Google Drive API אינו מופעל בפרויקט Google Cloud שלכם.\n\nאיך להפעיל ב-2 צעדים פשוטים:\n1. היכנסו לקונסולת Google Cloud בקישור הבא:\nhttps://console.developers.google.com/apis/api/drive.googleapis.com/overview\n2. לחצו על הכפתור הכחול "הפעל" (Enable API) והמתנו כדקה.\n3. נסו לשמור/לעדכן את המסמך ב-Drive שוב!'
+        : 'Google Drive API is not enabled in your Google Cloud project.\n\nTo enable it:\n1. Open Google Cloud Console:\nhttps://console.developers.google.com/apis/api/drive.googleapis.com/overview\n2. Click the blue "Enable API" button and wait a minute.\n3. Try saving to Drive again!';
+    }
+
     if (code === 'auth/operation-not-allowed' || message.includes('operation-not-allowed') || message.includes('provider is disabled')) {
       return lang === 'he'
         ? 'ספק ההתחברות של Google אינו מופעל בפרויקט Firebase שלך.\n\nאיך להפעיל ב-3 צעדים פשוטים:\n1. היכנס לקונסולת Firebase (console.firebase.google.com)\n2. בחר בפרויקט שלך -> כנס ל-Authentication -> בלשונית Sign-in method\n3. לחץ על ספק Google -> סמן "הפעל" (Enable) -> בחר דוא"ל תמיכה ולחץ "שמור".\n4. נסה לשמור ב-Drive שוב!'
@@ -260,59 +266,88 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
   };
 
   const getOrCreateDriveFolder = async (token: string): Promise<string> => {
-    const now = new Date();
-    const dd = String(now.getDate()).padStart(2, '0');
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const yyyy = now.getFullYear();
-    const dateStr = `${dd}${mm}${yyyy}`;
-
-    const aptIdentifier = apt.nickname || apt.address || 'apartment';
-    const cleanAptName = aptIdentifier
-      .replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '') // Keep alphanumeric and Hebrew letters
-      .trim();
-    
-    const folderName = `${cleanAptName}${dateStr}`;
-
     try {
-      // 1. Search if the folder already exists
-      const searchUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
-        `name = '${folderName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`
+      const isHe = lang === 'he';
+      const rootFolderName = isHe ? 'EasyRent - מסמכי נכסים' : 'EasyRent - Property Documents';
+
+      // 1. Find or create Root App Folder in Drive root
+      let rootFolderId = '';
+      const rootSearchUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
+        `name = '${rootFolderName.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and 'root' in parents and trashed = false`
       )}`;
 
-      const searchResponse = await fetch(searchUrl, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const rootSearchResponse = await fetch(rootSearchUrl, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (searchResponse.ok) {
-        const searchData = await searchResponse.json();
-        if (searchData.files && searchData.files.length > 0) {
-          return searchData.files[0].id;
+      if (rootSearchResponse.ok) {
+        const data = await rootSearchResponse.json();
+        if (data.files && data.files.length > 0) {
+          rootFolderId = data.files[0].id;
         }
       }
 
-      // 2. Folder doesn't exist, create it
-      const createFolderResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+      if (!rootFolderId) {
+        const createRootResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: rootFolderName,
+            mimeType: 'application/vnd.google-apps.folder',
+            parents: ['root']
+          })
+        });
+
+        if (createRootResponse.ok) {
+          const rootFolderData = await createRootResponse.json();
+          rootFolderId = rootFolderData.id;
+        }
+      }
+
+      const parentFolderId = rootFolderId || 'root';
+
+      // 2. Find or create Apartment Subfolder inside the Root App Folder
+      const aptIdentifier = (apt.nickname || apt.name || apt.address || (isHe ? 'נכס' : 'Property')).trim();
+      const subFolderName = `${isHe ? 'נכס' : 'Property'} - ${aptIdentifier}`;
+
+      const subSearchUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
+        `name = '${subFolderName.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and '${parentFolderId}' in parents and trashed = false`
+      )}`;
+
+      const subSearchResponse = await fetch(subSearchUrl, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (subSearchResponse.ok) {
+        const subData = await subSearchResponse.json();
+        if (subData.files && subData.files.length > 0) {
+          return subData.files[0].id;
+        }
+      }
+
+      // Create Apartment Subfolder
+      const createSubResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: folderName,
-          mimeType: 'application/vnd.google-apps.folder'
+          name: subFolderName,
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: [parentFolderId]
         })
       });
 
-      if (createFolderResponse.ok) {
-        const folderData = await createFolderResponse.json();
-        return folderData.id;
+      if (createSubResponse.ok) {
+        const subFolderData = await createSubResponse.json();
+        return subFolderData.id;
       }
 
-      const errText = await createFolderResponse.text();
-      console.error("Failed to create folder:", errText);
-      throw new Error(`Failed to create Google Drive folder: ${errText}`);
+      return parentFolderId;
     } catch (e: any) {
       console.error("getOrCreateDriveFolder error:", e);
       throw e;
