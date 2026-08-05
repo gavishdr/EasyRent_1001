@@ -70,6 +70,7 @@ export interface Tenant {
   aptName?: string;
   entryDate?: string;
   phone?: string;
+  email?: string;
   notes?: string;
 }
 
@@ -81,6 +82,7 @@ export interface TenantHistory {
   entryDate?: string;
   exitDate?: string;
   phone?: string;
+  email?: string;
   notes?: string;
   archivedAt?: string;
 }

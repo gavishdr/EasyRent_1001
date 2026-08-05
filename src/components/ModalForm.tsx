@@ -41,12 +41,18 @@ export const ModalForm: React.FC<ModalFormProps> = ({
       return;
     }
     try {
-      const contacts = await (navigator as any).contacts.select(['name', 'tel'], { multiple: false });
+      const contacts = await (navigator as any).contacts.select(['name', 'tel', 'email'], { multiple: false });
       if (contacts && contacts.length > 0) {
         const contact = contacts[0];
         const newName = contact.name && contact.name.length > 0 ? contact.name[0] : '';
         const newPhone = contact.tel && contact.tel.length > 0 ? contact.tel[0] : '';
-        setFormData((prev: any) => ({ ...prev, name: newName || prev.name, phone: newPhone || prev.phone }));
+        const newEmail = contact.email && contact.email.length > 0 ? contact.email[0] : '';
+        setFormData((prev: any) => ({
+          ...prev,
+          name: newName || prev.name,
+          phone: newPhone || prev.phone,
+          email: newEmail || prev.email
+        }));
       }
     } catch (ex) {
       console.error("Contact picker error:", ex);
