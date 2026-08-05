@@ -19,7 +19,8 @@ import {
   Expense,
   Inventory,
   RecurringBudget,
-  DocumentItem
+  DocumentItem,
+  CalendarEvent
 } from './types';
 
 import { LucideIcon } from './components/LucideIcon';
@@ -818,6 +819,7 @@ export default function App() {
   const [tenantHistory, setTenantHistory] = useState<TenantHistory[]>([]);
   const [recurringBudgets, setRecurringBudgets] = useState<RecurringBudget[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [cpiHistory, setCpiHistory] = useState<CpiIndex[]>([]);
   const [cpiType, setCpiType] = useState<'cpi' | 'construction'>(() => {
     return (localStorage.getItem('prop_app_cpi_type') as 'cpi' | 'construction') || 'cpi';
@@ -1020,6 +1022,7 @@ export default function App() {
       listenToCollection('tenant_history', setTenantHistory),
       listenToCollection('recurring_budgets', setRecurringBudgets),
       listenToCollection('documents', setDocuments),
+      listenToCollection('calendar_events', setCalendarEvents),
       listenToCollection('cpi_history', setCpiHistory)
     ];
 
@@ -2139,7 +2142,17 @@ export default function App() {
             )}
 
             {activeTab === 'calendar' && (
-              <CalendarView apartments={sortedApartments} payments={payments} expenses={expenses} repairs={repairs} t={t} lang={lang} />
+              <CalendarView
+                apartments={sortedApartments}
+                payments={payments}
+                expenses={expenses}
+                repairs={repairs}
+                calendarEvents={calendarEvents}
+                onSaveCalendarEvent={(data, id) => saveDocument('calendar_events', data, id)}
+                onDeleteCalendarEvent={(id) => deleteDocument('calendar_events', id)}
+                t={t}
+                lang={lang}
+              />
             )}
 
             {activeTab === 'forecast' && (

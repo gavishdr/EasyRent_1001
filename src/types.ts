@@ -182,3 +182,13 @@ export interface DocumentItem {
   updatedAt?: any;
 }
 
+export interface CalendarEvent {
+  id: string;
+  aptId: string;
+  title: string;
+  date: string;
+  notes?: string;
+  category?: 'handover' | 'inspection' | 'defect' | 'general' | string;
+  createdAt?: string;
+}
+
