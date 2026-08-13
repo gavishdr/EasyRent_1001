@@ -129,24 +129,25 @@ const NeighborCard: React.FC<{ n: Neighbor; showApt?: boolean; onEdit: () => voi
   t
 }) => {
   return (
-    <div className="bg-white dark:bg-slate-800 p-5 rounded-[2rem] flex justify-between items-center shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-all">
+    <div className="bg-white dark:bg-slate-800 p-5 rounded-[2rem] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-all gap-4 text-start">
       <div className="flex items-center gap-4">
-        <div className="bg-indigo-50 dark:bg-indigo-950/20 p-3 rounded-2xl text-indigo-600 dark:text-indigo-400"><LucideIcon name="User" size={24} /></div>
+        <div className="bg-indigo-50 dark:bg-indigo-950/20 p-3 rounded-2xl text-indigo-600 dark:text-indigo-400 flex-shrink-0"><LucideIcon name="User" size={24} /></div>
         <div className="text-start">
-          <div className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+          <div className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2 flex-wrap">
             {n.name}
-            {n.isCommittee === 'true' && <span className="bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-[10px] px-2 py-0.5 rounded-full">ועד</span>}
+            {n.isCommittee === 'true' && <span className="bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-[10px] px-2 py-0.5 rounded-full">{t('committee_yes') || 'ועד'}</span>}
           </div>
           {showApt && n.aptName && <div className="text-xs text-indigo-500 dark:text-indigo-400 font-bold mt-0.5">{n.aptName}</div>}
-          <div className="text-xs text-slate-400 dark:text-slate-300 mt-1">{t('floor')}: {n.floor}</div>
+          {n.floor !== undefined && n.floor !== '' && <div className="text-xs text-slate-400 dark:text-slate-300 mt-1">{t('floor')}: {n.floor}</div>}
           {n.notes && <div className="text-xs text-slate-400 dark:text-slate-300 mt-1">{n.notes}</div>}
         </div>
       </div>
-      <div className="flex gap-2">
-        <a href={`tel:${n.phone}`} className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-100 transition-colors"><LucideIcon name="Phone" size={20} /></a>
-        <a href={`https://wa.me/${n.phone ? n.phone.replace(/\D/g, '') : ''}`} target="_blank" rel="noopener noreferrer" className="p-3 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-xl hover:bg-green-100 transition-colors"><LucideIcon name="MessageCircle" size={20} /></a>
-        <button onClick={onEdit} className="p-3 bg-slate-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-650 transition-colors"><LucideIcon name="Edit2" size={20} /></button>
-        <button onClick={onDelete} className="p-3 bg-rose-50 dark:bg-rose-950/20 text-rose-500 dark:text-rose-450 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors"><LucideIcon name="Trash2" size={20} /></button>
+      <div className="flex gap-2 flex-wrap self-end sm:self-center">
+        {n.phone && <a href={`tel:${n.phone}`} className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-100 transition-colors" title={t('phone')}><LucideIcon name="Phone" size={20} /></a>}
+        {n.phone && <a href={`https://wa.me/${n.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-3 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-xl hover:bg-green-100 transition-colors" title="WhatsApp"><LucideIcon name="MessageCircle" size={20} /></a>}
+        {n.spousePhone && <a href={`tel:${n.spousePhone}`} className="p-3 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-100 transition-colors" title={t('spouse_phone')}><LucideIcon name="PhoneCall" size={20} /></a>}
+        <button onClick={onEdit} className="p-3 bg-slate-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-650 transition-colors" title={t('edit') || 'ערוך'}><LucideIcon name="Edit2" size={20} /></button>
+        <button onClick={onDelete} className="p-3 bg-rose-50 dark:bg-rose-950/20 text-rose-500 dark:text-rose-450 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors" title={t('delete') || 'מחק'}><LucideIcon name="Trash2" size={20} /></button>
       </div>
     </div>
   );

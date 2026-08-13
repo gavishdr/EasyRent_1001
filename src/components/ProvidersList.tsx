@@ -92,19 +92,19 @@ export const ProvidersList: React.FC<ProvidersListProps> = ({
       ) : (
         filtered.map(p => (
           <div key={p.id} className="bg-white dark:bg-slate-800 p-5 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-all text-start">
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
               <div className="flex items-center gap-4">
-                <div className="bg-indigo-50 dark:bg-indigo-950/20 p-3 rounded-2xl text-indigo-600 dark:text-indigo-400"><LucideIcon name="Wrench" size={24} /></div>
+                <div className="bg-indigo-50 dark:bg-indigo-950/20 p-3 rounded-2xl text-indigo-600 dark:text-indigo-400 flex-shrink-0"><LucideIcon name="Wrench" size={24} /></div>
                 <div className="text-start">
                   <div className="font-bold text-xl text-slate-800 dark:text-white">{p.name}</div>
                   <div className="text-xs text-indigo-500 dark:text-indigo-400 font-bold mt-0.5">{p.specialty}</div>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <a href={`tel:${p.phone}`} className="p-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-100 transition-colors"><LucideIcon name="Phone" size={20} /></a>
-                <a href={`https://wa.me/${p.phone ? p.phone.replace(/\D/g, '') : ''}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-xl hover:bg-green-100 transition-colors"><LucideIcon name="MessageCircle" size={20} /></a>
-                <button onClick={() => setEditing(p)} className="p-2 bg-slate-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-50"><LucideIcon name="Edit2" size={20} /></button>
-                <button onClick={() => confirm(t('confirm_delete')) && onDelete(p.id)} className="p-2 bg-rose-50 dark:bg-rose-950/20 text-rose-500 dark:text-rose-450 rounded-xl hover:bg-rose-100"><LucideIcon name="Trash2" size={20} /></button>
+              <div className="flex gap-2 flex-wrap self-end sm:self-center">
+                {p.phone && <a href={`tel:${p.phone}`} className="p-2.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-100 transition-colors" title={t('phone')}><LucideIcon name="Phone" size={20} /></a>}
+                {p.phone && <a href={`https://wa.me/${p.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-xl hover:bg-green-100 transition-colors" title="WhatsApp"><LucideIcon name="MessageCircle" size={20} /></a>}
+                <button onClick={() => setEditing(p)} className="p-2.5 bg-slate-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-650 transition-colors" title={t('edit') || 'ערוך'}><LucideIcon name="Edit2" size={20} /></button>
+                <button onClick={() => confirm(t('confirm_delete')) && onDelete(p.id)} className="p-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-500 dark:text-rose-450 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors" title={t('delete') || 'מחק'}><LucideIcon name="Trash2" size={20} /></button>
               </div>
             </div>
             {p.notes && <div className="text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-750 p-3 rounded-xl mb-4 italic">"{p.notes}"</div>}

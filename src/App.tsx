@@ -955,6 +955,135 @@ export default function App() {
     setSyncCodeInput(appId);
   }, [appId]);
 
+  const hasAnyModalOpen = Boolean(
+    isAptModalOpen ||
+    isSyncModalOpen ||
+    isContactModalOpen ||
+    isExportModalOpen ||
+    isHelpModalOpen ||
+    isRatesModalOpen ||
+    isCalcModalOpen ||
+    isLogoModalOpen ||
+    isPropListModalOpen ||
+    isRentSegmentsModalOpen ||
+    showPremiumPrompt ||
+    quickPaymentApt ||
+    quickRepairApt ||
+    quickExpenseApt ||
+    openQuickMenuId
+  );
+
+  const closeAllModals = () => {
+    setIsAptModalOpen(false);
+    setIsSyncModalOpen(false);
+    setIsContactModalOpen(false);
+    setIsExportModalOpen(false);
+    setIsHelpModalOpen(false);
+    setIsRatesModalOpen(false);
+    setIsCalcModalOpen(false);
+    setIsLogoModalOpen(false);
+    setIsPropListModalOpen(false);
+    setIsRentSegmentsModalOpen(false);
+    setShowPremiumPrompt(false);
+    setQuickPaymentApt(null);
+    setQuickRepairApt(null);
+    setQuickExpenseApt(null);
+    setOpenQuickMenuId(null);
+  };
+
+  const isNavigatingViaPopstate = useRef(false);
+  const currentStateRef = useRef({
+    activeTab,
+    selectedAptId,
+    hasAnyModalOpen,
+    lang
+  });
+
+  useEffect(() => {
+    currentStateRef.current = {
+      activeTab,
+      selectedAptId,
+      hasAnyModalOpen,
+      lang
+    };
+  }, [activeTab, selectedAptId, hasAnyModalOpen, lang]);
+
+  // Handle phone / browser hardware back button (popstate navigation & exit confirmation)
+  useEffect(() => {
+    try {
+      window.history.replaceState({ appRoot: true, level: 0 }, '');
+      window.history.pushState({ appRoot: true, level: 1 }, '');
+    } catch (e) {
+      console.warn('History API not accessible:', e);
+    }
+
+    const handlePopState = () => {
+      const { activeTab, selectedAptId, hasAnyModalOpen, lang } = currentStateRef.current;
+
+      isNavigatingViaPopstate.current = true;
+
+      if (hasAnyModalOpen) {
+        // Step 1: Close active modal
+        closeAllModals();
+        try {
+          window.history.pushState({ appRoot: false }, '');
+        } catch (e) {}
+      } else if (selectedAptId !== null) {
+        // Step 2: Exit apartment details back to main tab
+        setSelectedAptId(null);
+        try {
+          window.history.pushState({ appRoot: false }, '');
+        } catch (e) {}
+      } else if (activeTab !== 'dashboard') {
+        // Step 3: Return from secondary tab to main dashboard
+        setActiveTab('dashboard');
+        try {
+          window.history.pushState({ appRoot: false }, '');
+        } catch (e) {}
+      } else {
+        // Step 4: At root dashboard level - ask confirmation before exiting app
+        const confirmMsg = lang === 'he' 
+          ? 'האם ברצונך לצאת מהאפליקציה?' 
+          : 'Are you sure you want to exit the app?';
+        const wantToExit = window.confirm(confirmMsg);
+
+        if (!wantToExit) {
+          try {
+            window.history.pushState({ appRoot: true, level: 1 }, '');
+          } catch (e) {}
+        } else {
+          try {
+            window.history.back();
+          } catch (e) {}
+        }
+      }
+
+      setTimeout(() => {
+        isNavigatingViaPopstate.current = false;
+      }, 100);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  // Sync history stack when user navigates manually via UI
+  useEffect(() => {
+    if (isNavigatingViaPopstate.current) return;
+
+    const isAtRoot = activeTab === 'dashboard' && selectedAptId === null && !hasAnyModalOpen;
+    
+    if (!isAtRoot) {
+      try {
+        window.history.pushState({ appRoot: false }, '');
+      } catch (e) {
+        console.warn('Error pushing history state:', e);
+      }
+    }
+  }, [activeTab, selectedAptId, hasAnyModalOpen]);
+
   // Scroll Listener for Scroll-to-Top Button
   useEffect(() => {
     const handleScroll = () => {
