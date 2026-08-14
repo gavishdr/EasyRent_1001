@@ -115,12 +115,8 @@ export const CpiView: React.FC<CpiViewProps> = ({
     }
   }, [cpiHistory, onDeleteCpi]);
 
-  // Group CPI history by Year, ensuring they are strictly unique, deduplicated, and only published indexes are shown
-  const now = new Date();
-  const historyToUse = deduplicateCpiHistory(cpiHistory, cpiType as 'cpi' | 'construction').filter(item => {
-    const pubDate = getCpiPublicationDate(item.year, item.month);
-    return pubDate.getTime() <= now.getTime();
-  });
+  // Group CPI history by Year, ensuring they are strictly unique and deduplicated
+  const historyToUse = deduplicateCpiHistory(cpiHistory, cpiType as 'cpi' | 'construction');
   
   const groupedByYear: { [key: number]: CpiIndex[] } = {};
   historyToUse.forEach(item => {
@@ -171,7 +167,7 @@ export const CpiView: React.FC<CpiViewProps> = ({
     
     // Check if index already exists for this month/year (if not editing the same item)
     const exists = historyToUse.find(c => Number(c.year) === Number(formYear) && Number(c.month) === Number(formMonth) && c.id !== editingId);
-    if (exists) {
+    if (exists && !exists.id.startsWith('default-')) {
       alert(isHe ? 'כבר קיים מדד לחודש ושנה אלו' : 'An index already exists for this month and year');
       return;
     }
@@ -182,7 +178,8 @@ export const CpiView: React.FC<CpiViewProps> = ({
       year: Number(formYear),
       month: Number(formMonth),
       value: valNum,
-      publishedAt
+      publishedAt,
+      indexType: cpiType
     }, editingId);
 
     // Reset Form
@@ -196,7 +193,7 @@ export const CpiView: React.FC<CpiViewProps> = ({
     setFormMonth(item.month);
     const val = convertToBase(item.value, cpiType as 'cpi' | 'construction');
     setFormValue(val.toFixed(2));
-    setEditingId(item.id);
+    setEditingId(item.id.startsWith('default-') ? null : item.id);
     setIsFormOpen(true);
   };
 
@@ -246,65 +243,62 @@ export const CpiView: React.FC<CpiViewProps> = ({
       let importedCount = 0;
       let alreadyCount = 0;
 
+      // Existing stored items in custom history for current type
+      const storedCustom = (cpiHistory || []).filter(c => (c.indexType || 'cpi') === cpiType);
+
       for (const item of filteredDates) {
         const year = item.year;
         const monthNum = item.month;
         if (isNaN(year) || isNaN(monthNum)) continue;
 
-        // Skip importing if the index is not published yet
-        const pubDate = getCpiPublicationDate(year, monthNum);
-        if (pubDate.getTime() > new Date().getTime()) {
-          continue;
+        const value = item.currBase ? item.currBase.value : 0;
+        const base = item.currBase ? (item.currBase.baseDesc || "") : "";
+        if (!value || value <= 0) continue;
+
+        let multiplier = 1;
+        if (cpiType === 'construction') {
+          if (base.includes("2025")) {
+            multiplier = 940469.8032366304;
+          } else if (base.includes("2011")) {
+            multiplier = 678060.420502257;
+          } else {
+            multiplier = 940469.8032366304;
+          }
+        } else {
+          multiplier = BASE_MULTIPLIERS[base] || BASE_MULTIPLIERS["2024 ממוצע"];
         }
 
-        // Check if this month & year already exists in historyToUse
-        const alreadyExists = historyToUse.find(c => Number(c.year) === year && Number(c.month) === monthNum);
+        const convertedValue = Math.round(value * multiplier * 100) / 100;
+        if (convertedValue <= 0) continue;
 
-        if (alreadyExists) {
+        // Check if this month & year already exists in custom saved history with the exact value
+        const existingStored = storedCustom.find(c => Number(c.year) === year && Number(c.month) === monthNum);
+
+        if (existingStored && Math.abs(convertToBase(existingStored.value, cpiType as 'cpi' | 'construction') - convertedValue) < 0.05) {
           alreadyCount++;
         } else {
-          const value = item.currBase ? item.currBase.value : 0;
-          const base = item.currBase ? (item.currBase.baseDesc || "") : "";
-          if (!value) continue;
-
-          let multiplier = 1;
-          if (cpiType === 'construction') {
-            if (base.includes("2025")) {
-              multiplier = 940469.8032366304;
-            } else if (base.includes("2011")) {
-              multiplier = 678060.420502257;
-            } else {
-              multiplier = 940469.8032366304;
-            }
-          } else {
-            multiplier = BASE_MULTIPLIERS[base] || BASE_MULTIPLIERS["2024 ממוצע"];
-          }
-
-          const convertedValue = Math.round(value * multiplier * 100) / 100;
-
-          if (convertedValue > 0) {
-            const publishedAt = `${year}-${String(monthNum === 12 ? 1 : monthNum + 1).padStart(2, '0')}-15`;
-            await onSaveCpi({
-              year,
-              month: monthNum,
-              value: convertedValue,
-              publishedAt
-            }, null);
-            importedCount++;
-          }
+          const publishedAt = `${year}-${String(monthNum === 12 ? 1 : monthNum + 1).padStart(2, '0')}-15`;
+          await onSaveCpi({
+            year,
+            month: monthNum,
+            value: convertedValue,
+            publishedAt,
+            indexType: cpiType
+          }, existingStored ? existingStored.id : null);
+          importedCount++;
         }
       }
 
       if (importedCount > 0) {
         if (cpiType === 'construction') {
           alert(isHe 
-            ? `מדדי תשומות הבנייה יובאו בהצלחה מהלמ"ס! יובאו ${importedCount} מדדים חדשים משנת 2024 ואילך, המחושבים לפי בסיס יולי 1950.` 
-            : `Construction input indexes successfully imported! Imported ${importedCount} new indexes from 2024 onwards on July 1950 base.`
+            ? `מדדי תשומות הבנייה (קוד 200010) יובאו בהצלחה מהלמ"ס! עודכנו/יובאו ${importedCount} מדדים לפי בסיס יולי 1950.` 
+            : `Construction input indexes (code 200010) successfully imported from CBS! ${importedCount} indexes updated on July 1950 base.`
           );
         } else {
           alert(isHe 
-            ? `המדדים יובאו בהצלחה מהלמ"ס! יובאו ${importedCount} מדדים חדשים משנת 2024 ואילך, המחושבים ישירות לפי בסיס ספטמבר 1951.` 
-            : `CPI successfully imported! Imported ${importedCount} new indexes from 2024 onwards on September 1951 base.`
+            ? `מדד המחירים לצרכן (קוד 120010) יובא בהצלחה מהלמ"ס! עודכנו/יובאו ${importedCount} מדדים לפי בסיס ספטמבר 1951.` 
+            : `Consumer Price Index (code 120010) successfully imported from CBS! ${importedCount} indexes updated on September 1951 base.`
           );
         }
       } else if (alreadyCount > 0) {

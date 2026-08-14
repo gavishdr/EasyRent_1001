@@ -135,7 +135,11 @@ const NeighborCard: React.FC<{ n: Neighbor; showApt?: boolean; onEdit: () => voi
         <div className="text-start">
           <div className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2 flex-wrap">
             {n.name}
-            {n.isCommittee === 'true' && <span className="bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-[10px] px-2 py-0.5 rounded-full">{t('committee_yes') || 'ועד'}</span>}
+            {n.isCommittee === 'true' && (
+              <span className="bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold text-xs px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/40">
+                {t('committee_yes') || 'ועד'}
+              </span>
+            )}
           </div>
           {showApt && n.aptName && <div className="text-xs text-indigo-500 dark:text-indigo-400 font-bold mt-0.5">{n.aptName}</div>}
           {n.floor !== undefined && n.floor !== '' && <div className="text-xs text-slate-400 dark:text-slate-300 mt-1">{t('floor')}: {n.floor}</div>}

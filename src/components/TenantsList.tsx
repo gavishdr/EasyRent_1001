@@ -114,7 +114,14 @@ export const TenantsList: React.FC<TenantsListProps> = ({
           <LucideIcon name="UserPlus" size={20} />
           <span>{t('add_tenant')}</span>
         </button>
-        <button onClick={() => setShowArchive(!showArchive)} className={`px-4 rounded-2xl border font-bold flex items-center gap-2 transition-all ${showArchive ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
+        <button 
+          onClick={() => setShowArchive(!showArchive)} 
+          className={`px-4 rounded-2xl border font-bold flex items-center gap-2 transition-all ${
+            showArchive 
+              ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200 dark:shadow-none' 
+              : 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40'
+          }`}
+        >
           <LucideIcon name="Archive" size={18} />
           <span>{t('tenant_history')}</span>
         </button>
@@ -149,21 +156,31 @@ export const TenantsList: React.FC<TenantsListProps> = ({
         </>
       ) : (
         <div className="space-y-4">
-          <h3 className="font-bold text-amber-600 text-sm px-2 flex items-center gap-2"><LucideIcon name="Archive" size={14} /> {t('past_tenants')} ({tenantHistory.length})</h3>
+          <h3 className="font-bold text-orange-600 dark:text-orange-400 text-sm px-2 flex items-center gap-2">
+            <LucideIcon name="Archive" size={14} /> 
+            {t('past_tenants')} ({tenantHistory.length})
+          </h3>
           {tenantHistory.length === 0 && (
-            <div className="text-center py-10 opacity-50"><LucideIcon name="Archive" size={40} className="mx-auto mb-2 text-slate-300" /><p className="text-slate-400">הארכיון ריק</p></div>
+            <div className="text-center py-10 opacity-50">
+              <LucideIcon name="Archive" size={40} className="mx-auto mb-2 text-orange-300 dark:text-orange-600" />
+              <p className="text-slate-400">הארכיון ריק</p>
+            </div>
           )}
           {Object.keys(groupedHistory).sort().map(aptName => (
             <div key={aptName} className="mb-4 text-start">
-              <h3 className="font-bold text-slate-400 text-sm px-2 mb-2 flex items-center gap-2"><LucideIcon name="Home" size={14} /> {aptName}</h3>
+              <h3 className="font-bold text-slate-400 dark:text-slate-300 text-sm px-2 mb-2 flex items-center gap-2">
+                <LucideIcon name="Home" size={14} /> {aptName}
+              </h3>
               <div className="space-y-3">
                 {groupedHistory[aptName].sort((a: any, b: any) => new Date(b.exitDate || 0).getTime() - new Date(a.exitDate || 0).getTime()).map((h: any) => (
-                  <div key={h.id} className="bg-amber-50 dark:bg-amber-950/10 p-5 rounded-[2rem] shadow-sm border border-amber-100 dark:border-amber-900/30">
+                  <div key={h.id} className="bg-orange-50/90 dark:bg-orange-950/25 p-5 rounded-[2rem] shadow-sm border border-orange-200/80 dark:border-orange-900/50">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-4">
-                        <div className="bg-amber-100 dark:bg-amber-900/40 p-3 rounded-2xl text-amber-600"><LucideIcon name="Users" size={24} /></div>
+                        <div className="bg-orange-100 dark:bg-orange-900/50 p-3 rounded-2xl text-orange-600 dark:text-orange-400">
+                          <LucideIcon name="Users" size={24} />
+                        </div>
                         <div className="text-start">
-                          <div className="font-bold text-lg text-slate-700 dark:text-amber-300">{h.name}</div>
+                          <div className="font-bold text-lg text-slate-800 dark:text-orange-200">{h.name}</div>
                           {h.email && (
                             <a href={`mailto:${h.email}`} className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1 font-medium mt-0.5 hover:underline" dir="ltr">
                               <LucideIcon name="Mail" size={12} />
@@ -171,17 +188,17 @@ export const TenantsList: React.FC<TenantsListProps> = ({
                             </a>
                           )}
                           <div className="flex gap-3 mt-1 flex-wrap">
-                            {h.entryDate && <span className="text-xs text-slate-500">{t('entry_date')}: {new Date(h.entryDate).toLocaleDateString('he-IL')}</span>}
-                            {h.exitDate && <span className="text-xs text-amber-600 font-bold">{t('exit_date')}: {new Date(h.exitDate).toLocaleDateString('he-IL')}</span>}
+                            {h.entryDate && <span className="text-xs text-slate-500 dark:text-slate-400">{t('entry_date')}: {new Date(h.entryDate).toLocaleDateString('he-IL')}</span>}
+                            {h.exitDate && <span className="text-xs text-orange-600 dark:text-orange-400 font-bold">{t('exit_date')}: {new Date(h.exitDate).toLocaleDateString('he-IL')}</span>}
                           </div>
-                          {h.notes && <div className="text-xs text-slate-400 mt-1">{h.notes}</div>}
+                          {h.notes && <div className="text-xs text-slate-400 dark:text-slate-400 mt-1">{h.notes}</div>}
                         </div>
                       </div>
                       <div className="flex gap-1.5 flex-wrap">
                         {h.phone && <a href={`tel:${h.phone}`} className="p-2 bg-white dark:bg-slate-700 text-emerald-600 rounded-xl hover:bg-emerald-50 dark:hover:bg-slate-600 transition-colors" title={t('phone')}><LucideIcon name="Phone" size={16} /></a>}
                         {h.email && <a href={`mailto:${h.email}`} className="p-2 bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors" title={h.email}><LucideIcon name="Mail" size={16} /></a>}
                         <button onClick={() => setEditingHistory(h)} className="p-2 bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-600 transition-colors" title={t('edit') || 'ערוך'}><LucideIcon name="Edit2" size={16} /></button>
-                        <button onClick={() => confirm(t('restore_tenant') + '?') && onRestore(h)} className="p-2 bg-white dark:bg-slate-700 text-amber-500 rounded-xl hover:bg-amber-50 dark:hover:bg-slate-600 transition-colors" title={t('restore_tenant')}><LucideIcon name="RefreshCw" size={16} /></button>
+                        <button onClick={() => confirm(t('restore_tenant') + '?') && onRestore(h)} className="p-2 bg-white dark:bg-slate-700 text-orange-500 rounded-xl hover:bg-orange-50 dark:hover:bg-slate-600 transition-colors" title={t('restore_tenant')}><LucideIcon name="RefreshCw" size={16} /></button>
                         <button onClick={() => confirm(t('confirm_delete')) && onDeleteHistory(h.id)} className="p-2 bg-white dark:bg-slate-700 text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-slate-600 transition-colors" title={t('delete') || 'מחק'}><LucideIcon name="Trash2" size={16} /></button>
                       </div>
                     </div>
@@ -261,7 +278,7 @@ const TenantCard: React.FC<{ tenant: Tenant; showApt?: boolean; onEdit: () => vo
         {tenant.phone && <a href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-3 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-xl hover:bg-green-100 transition-colors" title="WhatsApp"><LucideIcon name="MessageCircle" size={20} /></a>}
         {tenant.email && <a href={`mailto:${tenant.email}`} className="p-3 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-100 transition-colors" title={tenant.email}><LucideIcon name="Mail" size={20} /></a>}
         <button onClick={onEdit} className="p-3 bg-slate-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-650 transition-colors" title={t('edit') || 'ערוך'}><LucideIcon name="Edit2" size={20} /></button>
-        <button onClick={onArchive} className="p-3 bg-amber-50 dark:bg-amber-950/20 text-amber-500 dark:text-amber-400 rounded-xl hover:bg-amber-100 transition-colors" title={t('archive_tenant')}><LucideIcon name="Archive" size={20} /></button>
+        <button onClick={onArchive} className="p-3 bg-orange-50 dark:bg-orange-950/25 text-orange-600 dark:text-orange-400 rounded-xl hover:bg-orange-100 transition-colors" title={t('archive_tenant')}><LucideIcon name="Archive" size={20} /></button>
         <button onClick={onDelete} className="p-3 bg-rose-50 dark:bg-rose-950/20 text-rose-500 dark:text-rose-450 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors" title={t('delete') || 'מחק'}><LucideIcon name="Trash2" size={20} /></button>
       </div>
     </div>

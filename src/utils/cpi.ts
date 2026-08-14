@@ -33,7 +33,8 @@ export const DEFAULT_CPI_LIST = [
   { year: 2026, month: 3, value: 40226962.60 },
   { year: 2026, month: 4, value: 40691566.60 },
   { year: 2026, month: 5, value: 40575415.60 },
-  { year: 2026, month: 6, value: 40575415.60 }
+  { year: 2026, month: 6, value: 40575415.60 },
+  { year: 2026, month: 7, value: 40691566.60 }
 ];
 
 export const DEFAULT_CONSTRUCTION_LIST = [
@@ -69,7 +70,8 @@ export const DEFAULT_CONSTRUCTION_LIST = [
   { year: 2026, month: 3, value: 95645778.99 },
   { year: 2026, month: 4, value: 96680295.77 },
   { year: 2026, month: 5, value: 97244577.65 },
-  { year: 2026, month: 6, value: 97432671.62 }
+  { year: 2026, month: 6, value: 97432671.62 },
+  { year: 2026, month: 7, value: 97338624.64 }
 ];
 
 export function convertToSept1951Base(value: number): number {
