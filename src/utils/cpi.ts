@@ -125,20 +125,30 @@ export function deduplicateCpiHistory(cpiHistory: CpiIndex[], indexType: 'cpi' |
   return Array.from(map.values());
 }
 
-export function getCpiPublicationDate(year: number, month: number): Date {
+export function getCpiPublicationDate(year: number, month: number, customPublishedAt?: string): Date {
+  if (customPublishedAt) {
+    const d = new Date(customPublishedAt);
+    if (!isNaN(d.getTime())) return d;
+  }
   const pubYear = month === 12 ? year + 1 : year;
   const pubMonth = month === 12 ? 0 : month;
-  return new Date(pubYear, pubMonth, 15, 18, 30, 0);
+  return new Date(pubYear, pubMonth, 15, 0, 0, 0);
 }
 
 export function getLatestKnownCpi(date: Date, cpiHistory: CpiIndex[], indexType: 'cpi' | 'construction' = 'cpi'): CpiIndex | null {
   const historyToUse = deduplicateCpiHistory(cpiHistory, indexType);
   const sorted = [...historyToUse].sort((a, b) => b.year - a.year || b.month - a.month);
-  const calcTime = date.getTime();
-  
+  if (sorted.length === 0) return null;
+
+  const calcYear = date.getFullYear();
+  const calcMonth = date.getMonth() + 1; // 1 to 12
+
+  // If an index exists in history (either imported from CBS or entered manually),
+  // it is known. For any calculation date in month M (e.g. August 2026),
+  // any index of month <= M (e.g. July 2026 / month 7) is immediately recognized and used,
+  // regardless of whether the calculation occurs on the 14th, morning of the 15th, or weekend.
   for (const item of sorted) {
-    const pubDate = getCpiPublicationDate(item.year, item.month);
-    if (calcTime >= pubDate.getTime()) {
+    if (item.year < calcYear || (item.year === calcYear && item.month <= calcMonth)) {
       return item;
     }
   }
@@ -208,7 +218,7 @@ export function calculateCpiLinkedRent(
 
   const change = bVal === 0 ? 0 : ((tVal / bVal) - 1) * 100;
   const adjusted = bVal === 0 ? baseRent : baseRent * (tVal / bVal);
-  const pubDate = getCpiPublicationDate(tYr, tMo);
+  const pubDate = getCpiPublicationDate(tYr, tMo, targetItem?.publishedAt);
 
   return {
     adjustedRent: Math.round(adjusted * 100) / 100,
