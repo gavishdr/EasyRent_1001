@@ -199,6 +199,16 @@ const TEXTS = {
     prime_spread_hint: "לדוגמה: -0.5 עבור פריים מינוס 0.5%, או +0.3",
     estimated_total_cost: "עלות משוערת לכל התקופה",
     track_explanation: "הסבר על מסלול המשכנתא",
+    mortgage_sub_title: "הגדרת פרטי הלוואת משכנתא, מסלולים ושיטת חישוב",
+    loan_track: "מסלול הלוואה",
+    amortization_schedule: "לוח סילוקין",
+    insurance_details: "פרטי ביטוח משכנתא (מבנה / חיים)",
+    pros_title: "יתרונות עיקריים",
+    cons_title: "שים לב / חסרונות",
+    read_more: "קרא עוד",
+    hide_details: "הסתר פירוט",
+    per_month_short: "/ חודש",
+    no_mortgage_hint: "לחץ על 'הוסף משכנתא' כדי להגדיר הלוואת משכנתא לנכס",
     original_amount: "סכום משיכה מקורי (₪)",
     mortgage_interest: "אחוז ריבית (%)",
     drawdown_date: "תאריך משיכה",
@@ -485,6 +495,16 @@ const TEXTS = {
     prime_spread_hint: "e.g. -0.5 for Prime - 0.5%, or +0.3",
     estimated_total_cost: "Estimated Total Period Cost",
     track_explanation: "Mortgage Track Explanation",
+    mortgage_sub_title: "Configure loan terms, mortgage tracks, and calculation method",
+    loan_track: "Loan Track",
+    amortization_schedule: "Amortization Schedule",
+    insurance_details: "Mortgage Insurance (Structure & Life)",
+    pros_title: "Key Advantages",
+    cons_title: "Important Considerations",
+    read_more: "Read more",
+    hide_details: "Hide details",
+    per_month_short: "/ month",
+    no_mortgage_hint: "Click 'Add Mortgage' to set up a mortgage for a property",
     original_amount: "Original Amount",
     mortgage_interest: "Interest Rate (%)",
     drawdown_date: "Drawdown Date",
@@ -2275,7 +2295,15 @@ export default function App() {
             )}
 
             {activeTab === 'mortgages' && (
-              <MortgagesList apartments={sortedApartments} mortgages={mortgages} onSave={(d, id) => saveDocument('mortgages', d, id)} onDelete={id => deleteDocument('mortgages', id)} t={t} />
+              <MortgagesList 
+                apartments={sortedApartments} 
+                mortgages={mortgages} 
+                onSave={(d, id) => saveDocument('mortgages', d, id)} 
+                onDelete={id => deleteDocument('mortgages', id)} 
+                t={t} 
+                lang={lang} 
+                currency={globalCurrency === 'USD' ? '$' : globalCurrency === 'EUR' ? '€' : globalCurrency === 'GBP' ? '£' : '₪'} 
+              />
             )}
 
             {activeTab === 'providers' && (

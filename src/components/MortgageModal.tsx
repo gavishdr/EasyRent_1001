@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LucideIcon } from './LucideIcon';
 import { Apartment, Mortgage } from '../types';
 import { 
@@ -15,6 +15,8 @@ interface MortgageModalProps {
   onSave: (data: Partial<Mortgage>, id?: string) => void;
   onCancel: () => void;
   t: (key: string) => string;
+  lang?: string;
+  currency?: string;
 }
 
 export const MortgageModal: React.FC<MortgageModalProps> = ({
@@ -22,8 +24,12 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
   apartments,
   onSave,
   onCancel,
-  t
+  t,
+  lang = 'he',
+  currency = '₪'
 }) => {
+  const isEn = lang === 'en';
+  
   const [formData, setFormData] = useState<Partial<Mortgage>>({
     aptId: initialData?.aptId || (apartments[0]?.id || ''),
     bank: initialData?.bank || '',
@@ -51,18 +57,22 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
   const selectedTrackInfo = getMortgageTrackInfo(formData.track);
   const isPrime = formData.track === 'prime';
   
-  // Calculate estimated total cost live
-  const estimatedCost = calculateEstimatedTotalCost(formData.payment || 0, formData.durationYears || 0);
+  // Calculate estimated total cost live with language and currency awareness
+  const estimatedCost = calculateEstimatedTotalCost(
+    formData.payment || 0, 
+    formData.durationYears || 0,
+    currency,
+    lang
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.bank || !formData.bank.trim()) {
-      alert(t('bank_name') + ' ' + (t('field_required') || 'שדה חובה'));
+      alert(t('bank_name') + ' ' + (isEn ? 'is required' : 'שדה חובה'));
       return;
     }
     const aptName = apartments.find(a => a.id === formData.aptId)?.name || '';
     
-    // Include estimatedTotalCost in saved data if available
     const toSave: Partial<Mortgage> = {
       ...formData,
       aptName,
@@ -87,7 +97,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                 {initialData?.id ? (t('edit') + ' ' + t('mortgage')) : t('add_mortgage')}
               </h3>
               <p className="text-xs text-slate-400 dark:text-slate-400 font-bold mt-0.5">
-                הגדרת פרטי הלוואת משכנתא, מסלולים ושיטת חישוב
+                {t('mortgage_sub_title')}
               </p>
             </div>
           </div>
@@ -120,7 +130,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                     <option key={a.id} value={a.id}>{a.name}</option>
                   ))}
                 </select>
-                <LucideIcon name="ChevronDown" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <LucideIcon name="ChevronDown" size={16} className={`absolute ${isEn ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none`} />
               </div>
             </div>
 
@@ -134,7 +144,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                   required
                   list="israeli-banks-list"
                   className="w-full p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl font-bold outline-none border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white"
-                  placeholder="לדוגמה: בנק לאומי"
+                  placeholder={isEn ? "e.g. Bank Leumi" : "לדוגמה: בנק לאומי"}
                   value={formData.bank || ''}
                   onChange={e => handleChange('bank', e.target.value)}
                 />
@@ -152,7 +162,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
             <div>
               <label className="text-xs font-bold text-slate-500 dark:text-slate-300 mb-1.5 flex items-center justify-between">
                 <span>{t('mortgage_track')} *</span>
-                <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold">מסלול הלוואה</span>
+                <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold">{t('loan_track')}</span>
               </label>
               <div className="relative">
                 <select
@@ -163,18 +173,18 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                 >
                   {MORTGAGE_TRACKS.map(tr => (
                     <option key={tr.id} value={tr.id}>
-                      {tr.label}
+                      {isEn ? tr.labelEn : tr.label}
                     </option>
                   ))}
                 </select>
-                <LucideIcon name="ChevronDown" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none" />
+                <LucideIcon name="ChevronDown" size={16} className={`absolute ${isEn ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none`} />
               </div>
             </div>
 
             <div>
               <label className="text-xs font-bold text-slate-500 dark:text-slate-300 mb-1.5 flex items-center justify-between">
                 <span>{t('calculation_method')} *</span>
-                <span className="text-[10px] text-slate-400 font-bold">לוח סילוקין</span>
+                <span className="text-[10px] text-slate-400 font-bold">{t('amortization_schedule')}</span>
               </label>
               <div className="relative">
                 <select
@@ -185,16 +195,16 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                 >
                   {CALCULATION_METHODS.map(cm => (
                     <option key={cm.id} value={cm.id}>
-                      {cm.label}
+                      {isEn ? cm.labelEn : cm.label}
                     </option>
                   ))}
                 </select>
-                <LucideIcon name="ChevronDown" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <LucideIcon name="ChevronDown" size={16} className={`absolute ${isEn ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none`} />
               </div>
             </div>
           </div>
 
-          {/* Prime Spread Field (when track is Prime or optional) */}
+          {/* Prime Spread Field (when track is Prime) */}
           {isPrime && (
             <div className="p-4 bg-amber-50/80 dark:bg-amber-950/25 border border-amber-200 dark:border-amber-900/40 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center gap-2 mb-2 text-amber-800 dark:text-amber-300 font-bold text-xs">
@@ -206,16 +216,20 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                   <input
                     type="text"
                     className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl font-bold outline-none border border-amber-300 dark:border-amber-800/60 text-slate-800 dark:text-white placeholder:text-slate-400 text-start"
-                    placeholder="-0.5 או +0.3"
+                    placeholder={isEn ? "-0.5 or +0.3" : "-0.5 או +0.3"}
                     value={formData.primeAdjustment || ''}
                     onChange={e => handleChange('primeAdjustment', e.target.value)}
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-amber-600 dark:text-amber-400 pointer-events-none">
+                  <span className={`absolute ${isEn ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-xs font-black text-amber-600 dark:text-amber-400 pointer-events-none`}>
                     %
                   </span>
                 </div>
                 <div className="text-xs text-amber-700 dark:text-amber-400 font-medium">
-                  לדוגמה: הקלד <span className="font-bold font-mono text-amber-900 dark:text-amber-200">-0.5</span> עבור פריים מינוס חצי אחוז (P-0.5%) או <span className="font-bold font-mono text-amber-900 dark:text-amber-200">+0.3</span> עבור פריים פלוס 0.3%.
+                  {isEn ? (
+                    <>e.g., enter <span className="font-bold font-mono text-amber-900 dark:text-amber-200">-0.5</span> for Prime minus 0.5% (P-0.5%) or <span className="font-bold font-mono text-amber-900 dark:text-amber-200">+0.3</span> for Prime + 0.3%.</>
+                  ) : (
+                    <>לדוגמה: הקלד <span className="font-bold font-mono text-amber-900 dark:text-amber-200">-0.5</span> עבור פריים מינוס חצי אחוז (P-0.5%) או <span className="font-bold font-mono text-amber-900 dark:text-amber-200">+0.3</span> עבור פריים פלוס 0.3%.</>
+                  )}
                 </div>
               </div>
             </div>
@@ -236,7 +250,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                   value={formData.originalAmount || ''}
                   onChange={e => handleChange('originalAmount', e.target.value)}
                 />
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 pointer-events-none">₪</span>
+                <span className={`absolute ${isEn ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 pointer-events-none`}>{currency}</span>
               </div>
             </div>
 
@@ -253,7 +267,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                   value={formData.interestRate || ''}
                   onChange={e => handleChange('interestRate', e.target.value)}
                 />
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 pointer-events-none">%</span>
+                <span className={`absolute ${isEn ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 pointer-events-none`}>%</span>
               </div>
             </div>
           </div>
@@ -274,7 +288,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
 
             <div>
               <label className="text-xs font-bold text-slate-500 dark:text-slate-300 mb-1.5 block">
-                {t('duration_years')} (תקופה בשנים)
+                {t('duration_years')} ({isEn ? 'Duration in Years' : 'תקופה בשנים'})
               </label>
               <input
                 type="number"
@@ -282,18 +296,18 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                 min="1"
                 max="50"
                 className="w-full p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl font-bold outline-none border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder:text-slate-400"
-                placeholder="למשל 13 או 20"
+                placeholder={isEn ? "e.g. 13 or 20" : "למשל 13 או 20"}
                 value={formData.durationYears || ''}
                 onChange={e => handleChange('durationYears', e.target.value)}
               />
             </div>
           </div>
 
-          {/* Monthly Payment & Balance */}
+          {/* Monthly Payment & Billing Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-bold text-slate-500 dark:text-slate-300 mb-1.5 block">
-                {t('payment_amount')} (חיוב חודשי ₪) *
+                {t('payment_amount')} ({isEn ? `Monthly ${currency}` : `חיוב חודשי ${currency}`}) *
               </label>
               <div className="relative">
                 <input
@@ -304,13 +318,13 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                   value={formData.payment || ''}
                   onChange={e => handleChange('payment', e.target.value)}
                 />
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 pointer-events-none">₪</span>
+                <span className={`absolute ${isEn ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 pointer-events-none`}>{currency}</span>
               </div>
             </div>
 
             <div>
               <label className="text-xs font-bold text-slate-500 dark:text-slate-300 mb-1.5 block">
-                {t('payment_date')} (יום חיוב בחודש)
+                {t('payment_date')} ({isEn ? 'Monthly billing date' : 'יום חיוב בחודש'})
               </label>
               <input
                 type="date"
@@ -325,7 +339,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-bold text-slate-500 dark:text-slate-300 mb-1.5 block">
-                {t('current_balance')} (סכום יתרה נוכחי ₪)
+                {t('current_balance')} ({isEn ? `Outstanding ${currency}` : `סכום יתרה נוכחי ${currency}`})
               </label>
               <div className="relative">
                 <input
@@ -336,13 +350,13 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                   value={formData.balance || ''}
                   onChange={e => handleChange('balance', e.target.value)}
                 />
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 pointer-events-none">₪</span>
+                <span className={`absolute ${isEn ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 pointer-events-none`}>{currency}</span>
               </div>
             </div>
 
             <div>
               <label className="text-xs font-bold text-slate-500 dark:text-slate-300 mb-1.5 block">
-                {t('balance_date')} (תאריך יתרה)
+                {t('balance_date')} ({isEn ? 'Balance date' : 'תאריך יתרה'})
               </label>
               <input
                 type="date"
@@ -367,7 +381,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                 </div>
                 <div className="text-end">
                   <span className="font-black text-xl text-rose-600 dark:text-rose-400 font-mono">
-                    ₪{estimatedCost.total.toLocaleString()}
+                    {currency}{estimatedCost.total.toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -378,7 +392,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
           <div className="p-4 bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-3">
             <div className="flex items-center gap-2 font-bold text-xs text-slate-700 dark:text-slate-200">
               <LucideIcon name="ShieldCheck" size={16} className="text-indigo-600 dark:text-indigo-400" />
-              <span>פרטי ביטוח משכנתא (מבנה / חיים)</span>
+              <span>{t('insurance_details')}</span>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -389,7 +403,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
                 <input
                   type="text"
                   className="w-full p-2.5 bg-white dark:bg-slate-800 rounded-xl font-bold outline-none border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white placeholder:text-slate-400"
-                  placeholder="למשל: מגדל / הראל"
+                  placeholder={isEn ? "e.g. Migdal / Harel" : "למשל: מגדל / הראל"}
                   value={formData.insuranceCompany || ''}
                   onChange={e => handleChange('insuranceCompany', e.target.value)}
                 />
@@ -428,19 +442,27 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
             <div className="p-4 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-2xl text-start space-y-2 animate-in fade-in duration-200">
               <div className="flex items-center gap-2 font-bold text-xs text-indigo-700 dark:text-indigo-300">
                 <LucideIcon name="BookOpen" size={16} />
-                <span>{t('track_explanation')}: {selectedTrackInfo.label}</span>
+                <span>{t('track_explanation')}: {isEn ? selectedTrackInfo.labelEn : selectedTrackInfo.label}</span>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                {selectedTrackInfo.description}
+                {isEn ? selectedTrackInfo.descriptionEn : selectedTrackInfo.description}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px]">
                 <div className="bg-white/80 dark:bg-slate-800/80 p-2.5 rounded-xl border border-indigo-100/50 dark:border-indigo-900/30">
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400 block mb-0.5">✓ יתרונות עיקריים:</span>
-                  <span className="text-slate-600 dark:text-slate-300">{selectedTrackInfo.pros}</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 block mb-0.5">
+                    ✓ {t('pros_title')}:
+                  </span>
+                  <span className="text-slate-600 dark:text-slate-300">
+                    {isEn ? selectedTrackInfo.prosEn : selectedTrackInfo.pros}
+                  </span>
                 </div>
                 <div className="bg-white/80 dark:bg-slate-800/80 p-2.5 rounded-xl border border-indigo-100/50 dark:border-indigo-900/30">
-                  <span className="font-bold text-amber-600 dark:text-amber-400 block mb-0.5">⚠ שים לב / חסרונות:</span>
-                  <span className="text-slate-600 dark:text-slate-300">{selectedTrackInfo.cons}</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-400 block mb-0.5">
+                    ⚠ {t('cons_title')}:
+                  </span>
+                  <span className="text-slate-600 dark:text-slate-300">
+                    {isEn ? selectedTrackInfo.consEn : selectedTrackInfo.cons}
+                  </span>
                 </div>
               </div>
             </div>
@@ -453,7 +475,7 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({
             </label>
             <textarea
               className="w-full p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl outline-none border border-slate-200 dark:border-slate-700 h-20 resize-none text-slate-800 dark:text-white text-xs"
-              placeholder="הערות ודגשים נוספים..."
+              placeholder={isEn ? "Additional notes and details..." : "הערות ודגשים נוספים..."}
               value={formData.notes || ''}
               onChange={e => handleChange('notes', e.target.value)}
             />

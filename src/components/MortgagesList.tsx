@@ -14,6 +14,8 @@ interface MortgagesListProps {
   onSave: (data: any, id?: string) => void;
   onDelete: (id: string) => void;
   t: (key: string) => string;
+  lang?: string;
+  currency?: string;
 }
 
 export const MortgagesList: React.FC<MortgagesListProps> = ({
@@ -21,8 +23,11 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
   mortgages,
   onSave,
   onDelete,
-  t
+  t,
+  lang = 'he',
+  currency = '₪'
 }) => {
+  const isEn = lang === 'en';
   const [editing, setEditing] = useState<any>(null);
   const [expandedExplanationId, setExpandedExplanationId] = useState<string | null>(null);
 
@@ -33,7 +38,7 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
   };
 
   const groupedMortgages = mortgages.reduce((acc: any, m) => {
-    const key = m.aptName || 'Unassigned';
+    const key = m.aptName || (isEn ? 'Unassigned' : 'ללא שיוך');
     if (!acc[key]) acc[key] = [];
     acc[key].push(m);
     return acc;
@@ -43,7 +48,7 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
     if (!dateStr) return '';
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: 'numeric' });
+    return d.toLocaleDateString(isEn ? 'en-US' : 'he-IL', { day: 'numeric', month: 'numeric', year: 'numeric' });
   };
 
   return (
@@ -65,6 +70,8 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
           onSave={handleSave}
           onCancel={() => setEditing(null)}
           t={t}
+          lang={lang}
+          currency={currency}
         />
       )}
 
@@ -73,7 +80,7 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
         <div className="text-center py-12 opacity-70 bg-white dark:bg-slate-800 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-700">
           <LucideIcon name="Landmark" size={48} className="mx-auto mb-3 text-slate-300 dark:text-slate-500" />
           <p className="text-slate-500 dark:text-slate-300 font-bold text-lg">{t('no_mortgage')}</p>
-          <p className="text-xs text-slate-400 mt-1">לחץ על "הוסף משכנתא" כדי להגדיר הלוואת משכנתא לנכס</p>
+          <p className="text-xs text-slate-400 mt-1">{t('no_mortgage_hint')}</p>
         </div>
       ) : (
         Object.keys(groupedMortgages).sort().map(aptName => (
@@ -86,21 +93,27 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
             <div className="space-y-4">
               {groupedMortgages[aptName].map((m: Mortgage) => {
                 const mortgageApt = apartments.find(a => a.id === m.aptId);
-                const cur = mortgageApt?.currency || '₪';
+                const cur = mortgageApt?.currency || currency;
                 
                 // Track & Method info
                 const trackInfo = getMortgageTrackInfo(m.track);
                 const methodInfo = getCalculationMethodInfo(m.calculationMethod);
                 
                 // Track label display
-                let trackDisplay = trackInfo ? trackInfo.label : (m.track || 'קל"צ - ריבית קבועה לא צמודה');
+                let trackDisplay = '';
+                if (trackInfo) {
+                  trackDisplay = isEn ? trackInfo.labelEn : trackInfo.label;
+                } else {
+                  trackDisplay = isEn ? 'Fixed Rate (Non-Linked)' : 'קל"צ - ריבית קבועה לא צמודה';
+                }
+
                 if (m.track === 'prime' && m.primeAdjustment) {
                   const adj = Number(m.primeAdjustment);
                   const sign = adj >= 0 ? `+${adj}%` : `${adj}%`;
-                  trackDisplay = `פריים (${sign})`;
+                  trackDisplay = isEn ? `Prime (${sign})` : `פריים (${sign})`;
                 }
 
-                const methodDisplay = methodInfo ? methodInfo.label : (m.calculationMethod === 'equal_principal' ? 'קרן שווה' : 'לוח שפיצר');
+                const methodDisplay = methodInfo ? (isEn ? methodInfo.labelEn : methodInfo.label) : (m.calculationMethod === 'equal_principal' ? (isEn ? 'Equal Principal' : 'קרן שווה') : (isEn ? 'Spitzer Table' : 'לוח שפיצר'));
 
                 // Time calculations
                 let endDateDisplay = '';
@@ -110,7 +123,7 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
                   const drawDate = new Date(m.drawdownDate);
                   const endDate = new Date(drawDate);
                   endDate.setFullYear(endDate.getFullYear() + Number(m.durationYears));
-                  endDateDisplay = endDate.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: 'numeric' });
+                  endDateDisplay = endDate.toLocaleDateString(isEn ? 'en-US' : 'he-IL', { day: 'numeric', month: 'numeric', year: 'numeric' });
 
                   const now = new Date();
                   let monthsLeft = (endDate.getFullYear() - now.getFullYear()) * 12 + (endDate.getMonth() - now.getMonth());
@@ -119,20 +132,30 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
                   if (monthsLeft > 0) {
                     const yLeft = Math.floor(monthsLeft / 12);
                     const mLeft = monthsLeft % 12;
-                    if (yLeft > 0 && mLeft > 0) {
-                      timeLeftDisplay = `${yLeft} שנים ו-${mLeft} חודשים`;
-                    } else if (yLeft > 0) {
-                      timeLeftDisplay = `${yLeft} שנים`;
+                    if (isEn) {
+                      if (yLeft > 0 && mLeft > 0) {
+                        timeLeftDisplay = `${yLeft} ${yLeft === 1 ? 'year' : 'years'} and ${mLeft} ${mLeft === 1 ? 'month' : 'months'}`;
+                      } else if (yLeft > 0) {
+                        timeLeftDisplay = `${yLeft} ${yLeft === 1 ? 'year' : 'years'}`;
+                      } else {
+                        timeLeftDisplay = `${mLeft} ${mLeft === 1 ? 'month' : 'months'}`;
+                      }
                     } else {
-                      timeLeftDisplay = `${mLeft} חודשים`;
+                      if (yLeft > 0 && mLeft > 0) {
+                        timeLeftDisplay = `${yLeft} שנים ו-${mLeft} חודשים`;
+                      } else if (yLeft > 0) {
+                        timeLeftDisplay = `${yLeft} שנים`;
+                      } else {
+                        timeLeftDisplay = `${mLeft} חודשים`;
+                      }
                     }
                   } else {
-                    timeLeftDisplay = t('ended') || 'הסתיימה';
+                    timeLeftDisplay = t('ended') || (isEn ? 'Ended' : 'הסתיימה');
                   }
                 }
 
-                // Estimated total cost
-                const estimatedCost = calculateEstimatedTotalCost(m.payment || 0, m.durationYears || 0);
+                // Estimated total cost calculation with language and currency
+                const estimatedCost = calculateEstimatedTotalCost(m.payment || 0, m.durationYears || 0, cur, lang);
 
                 const isExplanationOpen = expandedExplanationId === m.id;
 
@@ -141,38 +164,38 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
                     key={m.id} 
                     className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700/80 hover:shadow-md transition-all space-y-4"
                   >
-                    {/* Top Header Row (Matching user image structure) */}
+                    {/* Top Header Row (Matching layout structure) */}
                     <div className="flex justify-between items-start">
-                      {/* Action buttons (Trash & Edit on one side) */}
+                      {/* Action buttons (Trash & Edit) */}
                       <div className="flex gap-2">
                         <button 
                           onClick={() => confirm(t('confirm_delete')) && onDelete(m.id)} 
                           className="p-2.5 bg-rose-50 dark:bg-rose-950/30 text-rose-500 dark:text-rose-400 rounded-2xl hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors" 
-                          title={t('delete') || 'מחק'}
+                          title={t('delete') || (isEn ? 'Delete' : 'מחק')}
                         >
                           <LucideIcon name="Trash2" size={18} />
                         </button>
                         <button 
                           onClick={() => setEditing(m)} 
                           className="p-2.5 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-2xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors" 
-                          title={t('edit') || 'ערוך'}
+                          title={t('edit') || (isEn ? 'Edit' : 'ערוך')}
                         >
                           <LucideIcon name="Edit2" size={18} />
                         </button>
                       </div>
 
                       {/* Bank Name, Payment & Icon */}
-                      <div className="flex items-center gap-3 text-end">
+                      <div className={`flex items-center gap-3 ${isEn ? 'text-start' : 'text-end'}`}>
                         <div>
                           <h4 className="font-black text-xl text-slate-800 dark:text-white">
                             {m.bank}
                           </h4>
                           <div className="text-sm text-indigo-600 dark:text-indigo-400 font-bold mt-0.5">
-                            {cur}{Number(m.payment || 0).toLocaleString()} / חודש
+                            {cur}{Number(m.payment || 0).toLocaleString()} {t('per_month_short')}
                           </div>
                           
                           {/* Badges: Track & Calculation Method */}
-                          <div className="flex items-center justify-end gap-1.5 mt-2 flex-wrap">
+                          <div className={`flex items-center ${isEn ? 'justify-start' : 'justify-end'} gap-1.5 mt-2 flex-wrap`}>
                             <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 font-bold px-3 py-1 rounded-full text-xs border border-indigo-100 dark:border-indigo-800/30">
                               {trackDisplay}
                             </span>
@@ -188,12 +211,12 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
                       </div>
                     </div>
 
-                    {/* Inner Content Card (Styled with rounded borders, dividers & clean typography as in user image) */}
+                    {/* Inner Content Card */}
                     <div className="bg-slate-50/80 dark:bg-slate-750/70 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-700/60 text-start space-y-4">
                       
                       {/* Row 1: Original Drawdown Amount & Current Balance */}
                       <div className="flex justify-between items-start gap-4">
-                        {/* Original Amount (Left in LTR / Right in RTL) */}
+                        {/* Original Amount */}
                         <div className="text-start">
                           <span className="text-[11px] font-bold text-slate-400 dark:text-slate-400 block uppercase">
                             {t('original_amount')}
@@ -210,7 +233,7 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
                           </div>
                           {m.drawdownDate && (
                             <span className="text-xs text-slate-400 dark:text-slate-400 block mt-0.5">
-                              תאריך משיכה: {formatDate(m.drawdownDate)}
+                              {t('drawdown_date')}: {formatDate(m.drawdownDate)}
                             </span>
                           )}
                         </div>
@@ -258,7 +281,7 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
                             {t('end_date')}
                           </span>
                           <span className="font-black text-base text-slate-800 dark:text-white mt-1 block">
-                            {endDateDisplay || (m.drawdownDate && m.durationYears ? `${m.durationYears} שנים` : '-')}
+                            {endDateDisplay || (m.drawdownDate && m.durationYears ? `${m.durationYears} ${isEn ? 'years' : 'שנים'}` : '-')}
                           </span>
                         </div>
                       </div>
@@ -267,13 +290,13 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
                       <div className="border-t border-slate-200/70 dark:border-slate-700/60" />
 
                       {/* Row 3: Estimated Total Period Cost (Highlighted in Rose/Red) */}
-                      <div className="text-end">
+                      <div className={isEn ? 'text-start' : 'text-end'}>
                         <span className="text-[11px] font-bold text-slate-400 dark:text-slate-400 block uppercase">
                           {t('estimated_total_cost')}
                         </span>
                         <div className="mt-1">
                           <span className="font-black text-xl text-rose-600 dark:text-rose-400 font-mono tracking-tight">
-                            {estimatedCost ? `₪${estimatedCost.total.toLocaleString()}` : `${cur}${Number(m.estimatedTotalCost || 0).toLocaleString()}`}
+                            {estimatedCost ? `${cur}${estimatedCost.total.toLocaleString()}` : `${cur}${Number(m.estimatedTotalCost || 0).toLocaleString()}`}
                           </span>
                         </div>
                         {estimatedCost && (
@@ -287,24 +310,24 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
                       {(m.insuranceCompany || m.policyNumber) && (
                         <>
                           <div className="border-t border-slate-200/70 dark:border-slate-700/60" />
-                          <div className="text-end">
+                          <div className={isEn ? 'text-start' : 'text-end'}>
                             <span className="text-[11px] font-bold text-slate-400 dark:text-slate-400 block uppercase">
                               {t('insurance_company')}
                             </span>
                             <div className="font-black text-sm text-slate-800 dark:text-white mt-0.5">
                               {m.insuranceCompany || ''}
-                              {m.policyNumber ? ` | מספר פוליסה: ${m.policyNumber}` : ''}
+                              {m.policyNumber ? ` | ${t('policy_number')}: ${m.policyNumber}` : ''}
                             </div>
                             {m.insurancePhone && (
                               <a href={`tel:${m.insurancePhone}`} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-bold mt-0.5 inline-block">
-                                טלפון: {m.insurancePhone}
+                                {isEn ? 'Phone: ' : 'טלפון: '}{m.insurancePhone}
                               </a>
                             )}
                           </div>
                         </>
                       )}
 
-                      {/* Mortgage Track Explanation Box (Placed right under the Insurance box as requested) */}
+                      {/* Mortgage Track Explanation Box */}
                       {trackInfo && (
                         <>
                           <div className="border-t border-slate-200/70 dark:border-slate-700/60" />
@@ -312,29 +335,37 @@ export const MortgagesList: React.FC<MortgagesListProps> = ({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2 font-bold text-xs text-indigo-700 dark:text-indigo-300">
                                 <LucideIcon name="BookOpen" size={14} />
-                                <span>{t('track_explanation')}: {trackInfo.label}</span>
+                                <span>{t('track_explanation')}: {isEn ? trackInfo.labelEn : trackInfo.label}</span>
                               </div>
                               <button 
                                 onClick={() => setExpandedExplanationId(isExplanationOpen ? null : m.id)}
                                 className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
                               >
-                                {isExplanationOpen ? 'הסתר פירוט' : 'קרא עוד'}
+                                {isExplanationOpen ? t('hide_details') : t('read_more')}
                               </button>
                             </div>
                             
                             <p className={`text-xs text-slate-600 dark:text-slate-300 leading-relaxed ${!isExplanationOpen ? 'line-clamp-2' : ''}`}>
-                              {trackInfo.description}
+                              {isEn ? trackInfo.descriptionEn : trackInfo.description}
                             </p>
 
                             {isExplanationOpen && (
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 text-[11px] animate-in fade-in duration-200">
                                 <div className="bg-white/90 dark:bg-slate-800/90 p-2.5 rounded-xl border border-indigo-100/60 dark:border-indigo-900/30">
-                                  <span className="font-bold text-emerald-600 dark:text-emerald-400 block mb-0.5">✓ יתרונות:</span>
-                                  <span className="text-slate-600 dark:text-slate-300">{trackInfo.pros}</span>
+                                  <span className="font-bold text-emerald-600 dark:text-emerald-400 block mb-0.5">
+                                    ✓ {t('pros_title')}:
+                                  </span>
+                                  <span className="text-slate-600 dark:text-slate-300">
+                                    {isEn ? trackInfo.prosEn : trackInfo.pros}
+                                  </span>
                                 </div>
                                 <div className="bg-white/90 dark:bg-slate-800/90 p-2.5 rounded-xl border border-indigo-100/60 dark:border-indigo-900/30">
-                                  <span className="font-bold text-amber-600 dark:text-amber-400 block mb-0.5">⚠ חסרונות / דגשים:</span>
-                                  <span className="text-slate-600 dark:text-slate-300">{trackInfo.cons}</span>
+                                  <span className="font-bold text-amber-600 dark:text-amber-400 block mb-0.5">
+                                    ⚠ {t('cons_title')}:
+                                  </span>
+                                  <span className="text-slate-600 dark:text-slate-300">
+                                    {isEn ? trackInfo.consEn : trackInfo.cons}
+                                  </span>
                                 </div>
                               </div>
                             )}

@@ -1211,7 +1211,23 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
                         <span>{m.bank}</span>
                         {m.track && (
                           <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 font-bold px-2 py-0.5 rounded-full border border-indigo-100 dark:border-indigo-800/30">
-                            {m.track === 'kalatz' ? 'קל"צ' : m.track === 'katz' ? 'ק"צ' : m.track === 'matz' ? 'מ"צ' : m.track === 'malatz' ? 'מל"צ' : m.track === 'prime' ? (m.primeAdjustment ? `פריים (${Number(m.primeAdjustment) >= 0 ? `+${m.primeAdjustment}%` : `${m.primeAdjustment}%`})` : 'פריים') : m.track === 'balloon' ? 'בלון' : m.track === 'eligibility' ? 'זכאות' : m.track}
+                            {lang === 'he' ? (
+                              m.track === 'kalatz' ? 'קל"צ' : 
+                              m.track === 'katz' ? 'ק"צ' : 
+                              m.track === 'matz' ? 'מ"צ' : 
+                              m.track === 'malatz' ? 'מל"צ' : 
+                              m.track === 'prime' ? (m.primeAdjustment ? `פריים (${Number(m.primeAdjustment) >= 0 ? `+${m.primeAdjustment}%` : `${m.primeAdjustment}%`})` : 'פריים') : 
+                              m.track === 'balloon' ? 'בלון' : 
+                              m.track === 'eligibility' ? 'זכאות' : m.track
+                            ) : (
+                              m.track === 'kalatz' ? 'Fixed (Non-Linked)' : 
+                              m.track === 'katz' ? 'Fixed (CPI-Linked)' : 
+                              m.track === 'matz' ? 'Var (CPI-Linked)' : 
+                              m.track === 'malatz' ? 'Var (Non-Linked)' : 
+                              m.track === 'prime' ? (m.primeAdjustment ? `Prime (${Number(m.primeAdjustment) >= 0 ? `+${m.primeAdjustment}%` : `${m.primeAdjustment}%`})` : 'Prime') : 
+                              m.track === 'balloon' ? 'Balloon' : 
+                              m.track === 'eligibility' ? 'Govt Eligibility' : m.track
+                            )}
                           </span>
                         )}
                       </div>
