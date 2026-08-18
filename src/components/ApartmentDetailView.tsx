@@ -1207,7 +1207,14 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
                 {mortgages.map(m => (
                   <div key={m.id} className="bg-white dark:bg-slate-800 p-5 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700 flex justify-between items-center">
                     <div className="text-start">
-                      <div className="font-black text-base text-slate-800 dark:text-white">{m.bank}</div>
+                      <div className="font-black text-base text-slate-800 dark:text-white flex items-center gap-2 flex-wrap">
+                        <span>{m.bank}</span>
+                        {m.track && (
+                          <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 font-bold px-2 py-0.5 rounded-full border border-indigo-100 dark:border-indigo-800/30">
+                            {m.track === 'kalatz' ? 'קל"צ' : m.track === 'katz' ? 'ק"צ' : m.track === 'matz' ? 'מ"צ' : m.track === 'malatz' ? 'מל"צ' : m.track === 'prime' ? (m.primeAdjustment ? `פריים (${Number(m.primeAdjustment) >= 0 ? `+${m.primeAdjustment}%` : `${m.primeAdjustment}%`})` : 'פריים') : m.track === 'balloon' ? 'בלון' : m.track === 'eligibility' ? 'זכאות' : m.track}
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-slate-400 dark:text-slate-300 font-bold mt-1">
                         {lang === 'he' ? 'סכום יתרה' : 'Current Balance'}: {cur}{convertVal(Number(m.balance || 0)).toLocaleString()}
                       </div>

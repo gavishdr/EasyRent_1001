@@ -104,6 +104,9 @@ export interface Mortgage {
   aptId: string;
   aptName?: string;
   bank: string;
+  track?: string;
+  primeAdjustment?: number | string;
+  calculationMethod?: string;
   originalAmount?: number | string;
   interestRate?: number | string;
   drawdownDate?: string;
@@ -112,6 +115,7 @@ export interface Mortgage {
   balanceDate?: string;
   payment?: number | string;
   paymentDate?: string;
+  estimatedTotalCost?: number | string;
   insuranceCompany?: string;
   policyNumber?: string;
   insurancePhone?: string;
