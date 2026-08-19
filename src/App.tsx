@@ -310,7 +310,9 @@ const TEXTS = {
     my_status: "הסטטוס שלי בנכס",
     landlord: "בעל הנכס",
     tenant: "שוכר",
+    rent: "שכר דירה",
     rent_expense: "שכר דירה",
+    rent_payment: "שכר דירה",
     internet: "אינטרנט / תקשורת",
     insurance: "ביטוח",
     cleaning: "ניקיון ותחזוקה",
@@ -344,12 +346,22 @@ const TEXTS = {
     no_events: "אין אירועים בחודש זה",
     income_event: "הכנסה",
     expense_event: "הוצאה",
-    charts_tab: "גרפים",
+    charts_tab: "גרפים ופילוח הוצאות",
     monthly_chart: "הכנסות מול הוצאות",
     expense_breakdown: "פילוח הוצאות",
     income_label: "הכנסות",
     expenses_label: "הוצאות",
     no_chart_data: "אין נתונים להצגה",
+    all_properties: "כל הנכסים",
+    filter_property: "סינון לפי נכס",
+    filter_year: "סינון לפי שנה",
+    sort_by: "מיון פילוח",
+    sort_amount_desc: "סכום (מהגבוה לנמוך)",
+    sort_amount_asc: "סכום (מהנמוך לגבוה)",
+    sort_name: "שם סוג הוצאה",
+    sort_percent: "אחוז מההוצאות",
+    all_years: "כל השנים",
+    total_records: "רשומות",
     tenant_history: "ארכיון שוכרים",
     archive_tenant: "העבר לארכיון",
     exit_date: "תאריך יציאה",
@@ -373,7 +385,6 @@ const TEXTS = {
     income: "הכנסות",
     net_profit: "רווח נקי",
     recurring_expenses: "הוצאות שגרתיות",
-    all_properties: "כל הנכסים",
     month_col: "חודש",
     income_col: "הכנסה",
     expense_col: "הוצאה",
@@ -606,7 +617,9 @@ const TEXTS = {
     my_status: "My Status",
     landlord: "Landlord",
     tenant: "Tenant",
+    rent: "Rent",
     rent_expense: "Rent Payment",
+    rent_payment: "Rent Payment",
     internet: "Internet / Telecom",
     insurance: "Insurance",
     cleaning: "Cleaning & Maintenance",
@@ -640,12 +653,22 @@ const TEXTS = {
     no_events: "No events this month",
     income_event: "Income",
     expense_event: "Expense",
-    charts_tab: "Charts",
+    charts_tab: "Charts & Breakdown",
     monthly_chart: "Income vs Expenses",
     expense_breakdown: "Expense Breakdown",
     income_label: "Income",
     expenses_label: "Expenses",
     no_chart_data: "No data to display",
+    all_properties: "All Properties",
+    filter_property: "Filter by Property",
+    filter_year: "Filter by Year",
+    sort_by: "Sort Breakdown",
+    sort_amount_desc: "Amount (High to Low)",
+    sort_amount_asc: "Amount (Low to High)",
+    sort_name: "Expense Name",
+    sort_percent: "Percentage of Total",
+    all_years: "All Years",
+    total_records: "Records",
     tenant_history: "Tenant Archive",
     archive_tenant: "Move to Archive",
     exit_date: "Exit Date",
@@ -669,7 +692,6 @@ const TEXTS = {
     income: "Income",
     net_profit: "Net Profit",
     recurring_expenses: "Recurring Expenses",
-    all_properties: "All Properties",
     month_col: "Month",
     income_col: "Income",
     expense_col: "Expense",
@@ -2018,14 +2040,45 @@ export default function App() {
             <LucideIcon name={isDarkMode ? 'Sun' : 'Moon'} size={20} />
           </button>
 
-          {/* 13. Language toggle */}
-          <button
-            onClick={() => setLang(lang === 'he' ? 'en' : 'he')}
-            className="p-2.5 rounded-xl transition-all flex-shrink-0 text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-white flex items-center justify-center text-lg leading-none"
-            title={lang === 'he' ? 'English' : 'עברית'}
-          >
-            {lang === 'he' ? '🇺🇸' : '🇮🇱'}
-          </button>
+          {/* 13. Language segmented toggle */}
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 shrink-0">
+            <button
+              onClick={() => {
+                if (lang !== 'he') {
+                  setLang('he');
+                  localStorage.setItem('prop_app_lang', 'he');
+                  document.documentElement.dir = 'rtl';
+                  document.documentElement.lang = 'he';
+                }
+              }}
+              className={`px-2 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                lang === 'he'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-xs font-black'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+              }`}
+              title="עברית"
+            >
+              עב
+            </button>
+            <button
+              onClick={() => {
+                if (lang !== 'en') {
+                  setLang('en');
+                  localStorage.setItem('prop_app_lang', 'en');
+                  document.documentElement.dir = 'ltr';
+                  document.documentElement.lang = 'en';
+                }
+              }}
+              className={`px-2 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                lang === 'en'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-xs font-black'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+              }`}
+              title="English"
+            >
+              EN
+            </button>
+          </div>
 
           {/* 14. Font size scaling toggle */}
           <button
@@ -2353,7 +2406,16 @@ export default function App() {
             )}
 
             {activeTab === 'charts' && (
-              <ChartsView apartments={sortedApartments} payments={payments} expenses={expenses} repairs={repairs} t={t} lang={lang} />
+              <ChartsView 
+                apartments={sortedApartments} 
+                payments={payments} 
+                expenses={expenses} 
+                repairs={repairs} 
+                t={t} 
+                lang={lang} 
+                currency={globalCurrencySymbol || '₪'}
+                globalCurrency={globalCurrency}
+              />
             )}
 
             {/* Custom Properties screen */}
@@ -2530,6 +2592,61 @@ export default function App() {
                   <LucideIcon name="Calculator" size={20} className="text-indigo-600 dark:text-indigo-400" /> 
                   <span>{lang === 'he' ? 'מחשבון המרת מטבעות' : 'Currency Converter Calculator'}</span>
                 </button>
+
+                {/* Language Selection Setting */}
+                <div className="bg-white dark:bg-slate-800 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4 text-start">
+                  <div className="flex items-center gap-2.5">
+                    <div className="bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 p-2 rounded-xl font-bold">
+                      <LucideIcon name="Globe" size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm text-slate-800 dark:text-white leading-tight">
+                        {lang === 'he' ? 'שפת ממשק' : 'Interface Language'}
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                        {lang === 'he' 
+                          ? 'בחר את שפת התצוגה המועדפת עליך (עברית / English)' 
+                          : 'Choose your preferred display language (Hebrew / English)'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5 pt-1">
+                    {[
+                      { code: 'he' as const, label: 'עברית', sub: 'Hebrew', flag: '🇮🇱' },
+                      { code: 'en' as const, label: 'English', sub: 'אנגלית', flag: '🇺🇸' }
+                    ].map(langOpt => {
+                      const isActive = lang === langOpt.code;
+                      return (
+                        <button
+                          key={langOpt.code}
+                          onClick={() => {
+                            setLang(langOpt.code);
+                            localStorage.setItem('prop_app_lang', langOpt.code);
+                            document.documentElement.dir = langOpt.code === 'he' ? 'rtl' : 'ltr';
+                            document.documentElement.lang = langOpt.code;
+                          }}
+                          className={`py-3.5 px-3 rounded-2xl font-black text-xs transition-all duration-200 active:scale-95 shadow-sm border flex items-center justify-between cursor-pointer ${
+                            isActive 
+                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100 dark:shadow-none ring-2 ring-indigo-600/30' 
+                              : 'bg-slate-50 dark:bg-slate-750 text-slate-700 dark:text-slate-200 border-slate-100 dark:border-slate-700/60 hover:bg-slate-100 dark:hover:bg-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-lg">{langOpt.flag}</span>
+                            <div className="text-start">
+                              <div className="text-sm font-extrabold leading-none">{langOpt.label}</div>
+                              <div className="text-[10px] opacity-75 mt-0.5">{langOpt.sub}</div>
+                            </div>
+                          </div>
+                          {isActive && (
+                            <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs"></span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
                 {/* Global Currency Switcher */}
                 <div className="bg-white dark:bg-slate-800 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4 text-start">

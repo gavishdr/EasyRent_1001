@@ -167,6 +167,7 @@ export interface RecurringBudget {
   amount: number | string;
   freqMonths: string;
   startMonth: string;
+  year?: number | string;
   notes?: string;
 }
 

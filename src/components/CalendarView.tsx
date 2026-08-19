@@ -155,8 +155,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       else if (e.type === 'gas') expTypeLabel = 'גז';
       else if (e.type === 'hoa') expTypeLabel = 'ועד בית';
       else if (e.type === 'mortgage' || isMortgage) expTypeLabel = 'משכנתא';
+      else if (e.type === 'rent' || e.type === 'rent_expense' || e.type === 'rent_payment') expTypeLabel = 'שכר דירה';
       else if (e.type === 'insurance') expTypeLabel = 'ביטוח';
+      else if (e.type === 'cleaning') expTypeLabel = 'ניקיון ותחזוקה';
+      else if (e.type === 'gardening') expTypeLabel = 'גינון';
       else if (e.type === 'management_fee') expTypeLabel = 'דמי ניהול';
+      else if (e.type === 'professional_services') expTypeLabel = 'שירותים מקצועיים';
+      else if (e.type === 'taxes_fees') expTypeLabel = 'מיסים ואגרות';
+      else if (e.type === 'supplies') expTypeLabel = 'ציוד שוטף';
       else expTypeLabel = 'הוצאה שוטפת';
     } else {
       if (e.type === 'arnona') expTypeLabel = 'Property Tax (Arnona)';
@@ -165,8 +171,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       else if (e.type === 'gas') expTypeLabel = 'Gas';
       else if (e.type === 'hoa') expTypeLabel = 'HOA / Committee';
       else if (e.type === 'mortgage' || isMortgage) expTypeLabel = 'Mortgage';
+      else if (e.type === 'rent' || e.type === 'rent_expense' || e.type === 'rent_payment') expTypeLabel = 'Rent';
       else if (e.type === 'insurance') expTypeLabel = 'Insurance';
+      else if (e.type === 'cleaning') expTypeLabel = 'Cleaning';
+      else if (e.type === 'gardening') expTypeLabel = 'Gardening';
       else if (e.type === 'management_fee') expTypeLabel = 'Management Fee';
+      else if (e.type === 'professional_services') expTypeLabel = 'Professional Services';
+      else if (e.type === 'taxes_fees') expTypeLabel = 'Taxes & Fees';
+      else if (e.type === 'supplies') expTypeLabel = 'Supplies';
       else expTypeLabel = 'Expense';
     }
 

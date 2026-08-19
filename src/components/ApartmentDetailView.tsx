@@ -881,7 +881,15 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
   ];
 
   const filteredExpenses = expenses.filter(e => {
-    if (expenseFilterType && e.type !== expenseFilterType) return false;
+    if (expenseFilterType) {
+      if (expenseFilterType === 'mortgage' || expenseFilterType === 'mortgage_payment') {
+        if (e.type !== 'mortgage' && e.type !== 'mortgage_payment') return false;
+      } else if (expenseFilterType === 'rent' || expenseFilterType === 'rent_expense' || expenseFilterType === 'rent_payment') {
+        if (e.type !== 'rent' && e.type !== 'rent_expense' && e.type !== 'rent_payment') return false;
+      } else if (e.type !== expenseFilterType) {
+        return false;
+      }
+    }
     const dateVal = e.paymentDate || e.actualPaymentDate || (e.monthFrom ? e.monthFrom + '-01' : null) || (e.month ? e.month + '-01' : null);
     if (dateVal) {
       const eDate = new Date(dateVal);
@@ -1573,7 +1581,11 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
               >
                 <option value="">{t('all_types')}</option>
                 {['arnona', 'electricity', 'water', 'gas', 'hoa', 'mortgage_payment', 'rent_expense', 'internet', 'insurance', 'cleaning', 'management_fee', 'gardening', 'other_regular', 'professional_services', 'taxes_fees', 'supplies'].map(k => (
-                  <option key={k} value={k}>{t(k)}</option>
+                  <option key={k} value={k}>
+                    {(k === 'mortgage' || k === 'mortgage_payment') ? (lang === 'he' ? 'משכנתא' : 'Mortgage') :
+                     (k === 'rent' || k === 'rent_expense' || k === 'rent_payment') ? (lang === 'he' ? 'שכר דירה' : 'Rent') :
+                     (t(k) || k)}
+                  </option>
                 ))}
               </select>
               <input 
@@ -1645,7 +1657,11 @@ export const ApartmentDetailView: React.FC<ApartmentDetailViewProps> = ({
                     <div className="p-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-500 rounded-2xl shrink-0 flex items-center justify-center">
                       <LucideIcon name={getExpenseIcon(e.type)} size={18} />
                     </div>
-                    <span className="font-black text-base text-slate-800 dark:text-white">{t(e.type) || e.type}</span>
+                    <span className="font-black text-base text-slate-800 dark:text-white">
+                      {(e.type === 'mortgage' || e.type === 'mortgage_payment') ? (lang === 'he' ? 'משכנתא' : 'Mortgage') :
+                       (e.type === 'rent' || e.type === 'rent_expense' || e.type === 'rent_payment') ? (lang === 'he' ? 'שכר דירה' : 'Rent') :
+                       (t(e.type) || e.type)}
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
